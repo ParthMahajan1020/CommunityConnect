@@ -703,7 +703,7 @@ All rights reserved by the project contributors.
 
 ---
 
-##Author
+## Author
 
 *Parth Mahajan*  
 - BTech Student | Full-Stack Web Development & DSA
