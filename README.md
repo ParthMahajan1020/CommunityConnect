@@ -114,6 +114,7 @@ Send Connection Request
 
 ### Frontend
 
+* HTML & CSS
 * React.js
 * Vite
 * JavaScript
