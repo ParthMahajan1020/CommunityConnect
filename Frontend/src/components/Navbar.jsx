@@ -4,6 +4,7 @@ import CardNav from "./CardNav";
 import logo from "./logoCC.png";
 import { logoutUser } from "../services/api";
 
+
 function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();

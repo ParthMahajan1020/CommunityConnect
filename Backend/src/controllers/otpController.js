@@ -118,7 +118,7 @@ const sendPhoneOTP = async (req, res) => {
 
         // Development-only placeholder until an SMS provider is configured.
         if (process.env.NODE_ENV !== "production") {
-            console.log(`Phone OTP generated for ${phone}.`);
+            console.log(`Phone OTP generated for ${phone} : ${otp}`);
         }
 
         res.status(200).json({
