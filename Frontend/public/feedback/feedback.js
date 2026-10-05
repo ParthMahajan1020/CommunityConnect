@@ -1,8 +1,9 @@
 const API_BASE_URL =
-    (window.__APP_CONFIG__ && window.__APP_CONFIG__.API_BASE_URL) ||
-    (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    window.__APP_CONFIG__?.API_BASE_URL ||
+    (window.location.hostname === "localhost" ||
+        window.location.hostname === "127.0.0.1"
         ? "http://localhost:5000/api"
-        : `${window.location.origin}/api`);
+        : "https://communityconnect-backend-2vy1.onrender.com/api");
 
 const feedbackForm = document.getElementById("feedbackForm");
 
@@ -173,14 +174,22 @@ feedbackForm.addEventListener("submit", async (event) => {
         );
 
 
-        const data = await response.json();
+        const responseText = await response.text();
 
+        let data = {};
+
+        if (responseText.trim()) {
+            try {
+                data = JSON.parse(responseText);
+            } catch {
+                console.error("Invalid JSON response:", responseText);
+            }
+        }
 
         if (!response.ok) {
-
             throw new Error(
                 data.message ||
-                "Failed to submit feedback."
+                `Feedback submission failed. Server returned ${response.status}.`
             );
         }
 
