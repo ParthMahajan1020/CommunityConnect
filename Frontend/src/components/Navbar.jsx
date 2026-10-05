@@ -4,7 +4,6 @@ import CardNav from "./CardNav";
 import logo from "./logoCC.png";
 import { logoutUser } from "../services/api";
 
-
 function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
@@ -71,6 +70,12 @@ function Navbar() {
                     label: "My Requests",
                     ariaLabel: "View My Requests",
                     href: "/requests"
+                },
+
+                {
+                    label: "Feedback",
+                    ariaLabel: "Give Feedback",
+                    href: "/feedback/index.html"
                 }
             ]
         },
@@ -105,8 +110,13 @@ function Navbar() {
     ], [user]);
 
     const handleNavigate = useCallback((path) => {
-        navigate(path);
-    }, [navigate]);
+    if (path === "/feedback/index.html") {
+        window.location.assign("/feedback/index.html");
+        return;
+    }
+
+    navigate(path);
+}, [navigate]);
 
     return (
         <CardNav

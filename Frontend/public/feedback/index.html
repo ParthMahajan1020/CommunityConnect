@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CommunityConnect — User Feedback</title>
+
+    <script>
+        window.__APP_CONFIG__ = window.__APP_CONFIG__ || {};
+        window.__APP_CONFIG__.API_BASE_URL =
+            window.__APP_CONFIG__.API_BASE_URL ||
+            (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+                ? "http://localhost:5000/api"
+                : `${window.location.origin}/api`);
+    </script>
+
+    <link rel="stylesheet" href="./feedback.css">
+</head>
+
+<body>
+
+    <main class="feedback-page">
+
+        <section class="feedback-container">
+
+            <div class="feedback-header">
+                <span class="eyebrow">COMMUNITYCONNECT</span>
+
+                <h1>User Feedback</h1>
+
+                <p>
+                    Your feedback helps us understand your experience
+                    and improve CommunityConnect for everyone.
+                </p>
+            </div>
+
+
+            <form id="feedbackForm">
+
+                <!-- Question 1 -->
+                <div class="question-card">
+
+                    <div class="question-number">01</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            Which type of user are you?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <p class="question-subtitle">
+                            Required · Single choice
+                        </p>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input
+                                    type="radio"
+                                    name="userType"
+                                    value="Blood Donor"
+                                    required
+                                >
+                                <span>Blood Donor</span>
+                            </label>
+
+                            <label class="option">
+                                <input
+                                    type="radio"
+                                    name="userType"
+                                    value="Blood Seeker"
+                                >
+                                <span>Blood Seeker</span>
+                            </label>
+
+                            <label class="option">
+                                <input
+                                    type="radio"
+                                    name="userType"
+                                    value="Local Service Provider"
+                                >
+                                <span>Local Service Provider</span>
+                            </label>
+
+                            <label class="option">
+                                <input
+                                    type="radio"
+                                    name="userType"
+                                    value="Local Service Seeker"
+                                >
+                                <span>Local Service Seeker</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 2 -->
+                <div class="question-card">
+
+                    <div class="question-number">02</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            How easy was it to use CommunityConnect?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="easeOfUse" value="Very Easy" required>
+                                <span>Very Easy</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="easeOfUse" value="Easy">
+                                <span>Easy</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="easeOfUse" value="Average">
+                                <span>Average</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="easeOfUse" value="Difficult">
+                                <span>Difficult</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="easeOfUse" value="Very Difficult">
+                                <span>Very Difficult</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 3 -->
+                <div class="question-card">
+
+                    <div class="question-number">03</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            How easy was it to understand the website?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="websiteUnderstanding" value="Very Easy" required>
+                                <span>Very Easy</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="websiteUnderstanding" value="Easy">
+                                <span>Easy</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="websiteUnderstanding" value="Average">
+                                <span>Average</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="websiteUnderstanding" value="Difficult">
+                                <span>Difficult</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="websiteUnderstanding" value="Very Difficult">
+                                <span>Very Difficult</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 4 -->
+                <div class="question-card">
+
+                    <div class="question-number">04</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            How useful do you find CommunityConnect?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="usefulness" value="Very Useful" required>
+                                <span>Very Useful</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="usefulness" value="Useful">
+                                <span>Useful</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="usefulness" value="Average">
+                                <span>Average</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="usefulness" value="Not Very Useful">
+                                <span>Not Very Useful</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="usefulness" value="Not Useful">
+                                <span>Not Useful</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 5 -->
+                <div class="question-card">
+
+                    <div class="question-number">05</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            How easy was it to find the service/blood-related option you needed?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="findingOption" value="Very Easy" required>
+                                <span>Very Easy</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="findingOption" value="Easy">
+                                <span>Easy</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="findingOption" value="Average">
+                                <span>Average</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="findingOption" value="Difficult">
+                                <span>Difficult</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="findingOption" value="Very Difficult">
+                                <span>Very Difficult</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="findingOption" value="Not Applicable">
+                                <span>Not Applicable</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 6 -->
+                <div class="question-card">
+
+                    <div class="question-number">06</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            How would you rate the overall design of the website?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="designRating" value="Excellent" required>
+                                <span>Excellent</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="designRating" value="Good">
+                                <span>Good</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="designRating" value="Average">
+                                <span>Average</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="designRating" value="Poor">
+                                <span>Poor</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="designRating" value="Very Poor">
+                                <span>Very Poor</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 7 -->
+                <div class="question-card">
+
+                    <div class="question-number">07</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            How would you rate the overall experience?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <p class="question-subtitle">
+                            1–5 rating · Very Poor → Excellent
+                        </p>
+
+                        <div class="rating-options">
+
+                            <label>
+                                <input type="radio" name="overallExperience" value="1" required>
+                                <span>1</span>
+                            </label>
+
+                            <label>
+                                <input type="radio" name="overallExperience" value="2">
+                                <span>2</span>
+                            </label>
+
+                            <label>
+                                <input type="radio" name="overallExperience" value="3">
+                                <span>3</span>
+                            </label>
+
+                            <label>
+                                <input type="radio" name="overallExperience" value="4">
+                                <span>4</span>
+                            </label>
+
+                            <label>
+                                <input type="radio" name="overallExperience" value="5">
+                                <span>5</span>
+                            </label>
+
+                        </div>
+
+                        <div class="rating-labels">
+                            <span>Very Poor</span>
+                            <span>Excellent</span>
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 8 -->
+                <div class="question-card">
+
+                    <div class="question-number">08</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            Do you think CommunityConnect can be useful in your local community?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="communityUsefulness" value="Definitely Yes" required>
+                                <span>Definitely Yes</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="communityUsefulness" value="Probably Yes">
+                                <span>Probably Yes</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="communityUsefulness" value="Not Sure">
+                                <span>Not Sure</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="communityUsefulness" value="Probably No">
+                                <span>Probably No</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="communityUsefulness" value="Definitely No">
+                                <span>Definitely No</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 9 -->
+                <div class="question-card">
+
+                    <div class="question-number">09</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            Would you use CommunityConnect again when you need it?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="useAgain" value="Yes" required>
+                                <span>Yes</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="useAgain" value="Maybe">
+                                <span>Maybe</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="useAgain" value="No">
+                                <span>No</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 10 -->
+                <div class="question-card">
+
+                    <div class="question-number">10</div>
+
+                    <div class="question-content">
+
+                        <h2>
+                            Would you recommend CommunityConnect to others?
+                            <span class="required">*</span>
+                        </h2>
+
+                        <div class="options">
+
+                            <label class="option">
+                                <input type="radio" name="recommend" value="Definitely Yes" required>
+                                <span>Definitely Yes</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="recommend" value="Probably Yes">
+                                <span>Probably Yes</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="recommend" value="Not Sure">
+                                <span>Not Sure</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="recommend" value="Probably No">
+                                <span>Probably No</span>
+                            </label>
+
+                            <label class="option">
+                                <input type="radio" name="recommend" value="Definitely No">
+                                <span>Definitely No</span>
+                            </label>
+
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Question 11 -->
+                <div class="question-card feedback-card">
+
+                    <div class="question-number">11</div>
+
+                    <div class="question-content">
+
+                        <h2>Your Feedback</h2>
+
+                        <p class="question-subtitle">
+                            Optional
+                        </p>
+
+                        <textarea
+                            id="additionalFeedback"
+                            name="additionalFeedback"
+                            maxlength="2000"
+                            placeholder="What did you like about CommunityConnect, and what would you suggest we improve?"
+                        ></textarea>
+
+                        <div class="character-count">
+                            <span id="characterCount">0</span>/2000
+                        </div>
+
+                    </div>
+                </div>
+
+
+                <!-- Status -->
+                <div
+                    id="formMessage"
+                    class="form-message"
+                    aria-live="polite"
+                ></div>
+
+
+                <!-- Submit -->
+                <button
+                    type="submit"
+                    id="submitButton"
+                    class="submit-button"
+                >
+                    <span id="buttonText">Submit Feedback</span>
+                    <span id="buttonLoader" class="loader hidden"></span>
+                </button>
+
+            </form>
+
+        </section>
+
+    </main>
+
+    <script src="./feedback.js"></script>
+
+</body>
+</html>

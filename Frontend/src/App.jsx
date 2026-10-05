@@ -1,9 +1,9 @@
 import {
-    BrowserRouter,
-    Routes,
-    Route,
-    Navigate,
-    Outlet
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+  Outlet,
 } from "react-router-dom";
 
 import SoftAurora from "./components/SoftAurora";
@@ -29,133 +29,81 @@ import ProtectedRoute from "./components/ProtectedRoute";
  * Outlet renders the current page below the navbar.
  */
 function ProtectedLayout() {
-    return (
-        <>
-            <Navbar />
+  return (
+    <>
+      <Navbar />
 
-            <main className="relative z-10 pt-28">
-                <Outlet />
-            </main>
-        </>
-    );
+      <main className="relative z-10 pt-28">
+        <Outlet />
+      </main>
+    </>
+  );
 }
 
 function App() {
-    return (
-        <BrowserRouter>
+  return (
+    <BrowserRouter>
+      {/* GLOBAL SOFT AURORA BACKGROUND */}
+      <div className="fixed inset-0 -z-10">
+        <SoftAurora
+          speed={0.6}
+          scale={1.5}
+          brightness={1}
+          color1="#f7f7f7"
+          color2="#e100ff"
+          noiseFrequency={2.5}
+          noiseAmplitude={1}
+          bandHeight={0.5}
+          bandSpread={1}
+          octaveDecay={0.1}
+          layerOffset={0}
+          colorSpeed={1}
+          enableMouseInteraction
+          mouseInfluence={0.25}
+        />
+      </div>
 
-            {/* GLOBAL SOFT AURORA BACKGROUND */}
-            <div className="fixed inset-0 -z-10">
-                <SoftAurora
-                    speed={0.6}
-                    scale={1.5}
-                    brightness={1}
-                    color1="#f7f7f7"
-                    color2="#e100ff"
-                    noiseFrequency={2.5}
-                    noiseAmplitude={1}
-                    bandHeight={0.5}
-                    bandSpread={1}
-                    octaveDecay={0.1}
-                    layerOffset={0}
-                    colorSpeed={1}
-                    enableMouseInteraction
-                    mouseInfluence={0.25}
-                />
-            </div>
+      {/* ROUTES */}
+      <Routes>
+        {/* DEFAULT */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
 
-            {/* ROUTES */}
-            <Routes>
+        {/* PUBLIC ROUTES */}
+        <Route path="/login" element={<Login />} />
 
-                {/* DEFAULT */}
-                <Route
-                    path="/"
-                    element={
-                        <Navigate
-                            to="/login"
-                            replace
-                        />
-                    }
-                />
+        <Route path="/register" element={<Register />} />
 
-                {/* PUBLIC ROUTES */}
-                <Route
-                    path="/login"
-                    element={<Login />}
-                />
+        {/* PROTECTED ROUTES */}
+        <Route element={<ProtectedRoute />}>
+          {/* GLOBAL AUTHENTICATED LAYOUT */}
+          <Route element={<ProtectedLayout />}>
+            {/* HOME */}
+            <Route path="/home" element={<Home />} />
 
-                <Route
-                    path="/register"
-                    element={<Register />}
-                />
+            {/* BLOOD */}
+            <Route path="/blood" element={<FindBlood />} />
 
-                {/* PROTECTED ROUTES */}
-                <Route element={<ProtectedRoute />}>
+            <Route path="/blood/donor" element={<BloodDonor />} />
 
-                    {/* GLOBAL AUTHENTICATED LAYOUT */}
-                    <Route element={<ProtectedLayout />}>
+            {/* SERVICES */}
+            <Route path="/services/provider" element={<ServiceProvider />} />
 
-                        {/* HOME */}
-                        <Route
-                            path="/home"
-                            element={<Home />}
-                        />
+            <Route path="/services" element={<FindService />} />
 
-                        {/* BLOOD */}
-                        <Route
-                            path="/blood"
-                            element={<FindBlood />}
-                        />
+            {/* REQUESTS */}
+            <Route path="/requests" element={<MyRequests />} />
 
-                        <Route
-                            path="/blood/donor"
-                            element={<BloodDonor />}
-                        />
+            {/* PROFILE */}
+            <Route path="/profile" element={<Profile />} />
 
-                        {/* SERVICES */}
-                        <Route
-                            path="/services/provider"
-                            element={<ServiceProvider />}
-                        />
+          </Route>
+        </Route>
 
-                        {/* JOBS
-                            Kept for later development.
-                            Not shown in Navbar.
-                        */}
-                        <Route
-                            path="/services"
-                            element={<FindService />}
-                        />
-
-                        {/* REQUESTS */}
-                        <Route
-                            path="/requests"
-                            element={<MyRequests />}
-                        />
-
-                        {/* PROFILE */}
-                        <Route
-                            path="/profile"
-                            element={<Profile />}
-                        />
-
-                    </Route>
-                </Route>
-
-                {/* FALLBACK */}
-                <Route
-                    path="*"
-                    element={
-                        <Navigate
-                            to="/home"
-                            replace
-                        />
-                    }
-                />
-
-            </Routes>
-        </BrowserRouter>
-    );
+        {/* FALLBACK */}
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;

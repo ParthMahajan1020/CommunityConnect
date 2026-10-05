@@ -10,13 +10,27 @@ const otpRoutes = require("./routes/otpRoutes");
 const bloodRoutes = require("./routes/bloodRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const emailActionRoutes = require("./routes/emailActionRoutes");
+const feedbackRoutes = require("./routes/feedbackRoutes");
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+const allowedOrigins = [
+    "http://localhost:5173",
+    process.env.FRONTEND_URL
+].filter(Boolean);
 
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST", "PUT", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"]
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+            return;
+        }
+
+        callback(new Error("Not allowed by CORS"));
+    },
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true
 }));
 app.use(express.json());
 
@@ -46,6 +60,7 @@ app.use("/api/otp", otpRoutes);
 app.use("/api/blood", bloodRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/email-actions", emailActionRoutes);
+app.use("/api/feedback", feedbackRoutes);
 
 app.use((error, req, res, next) => {
     console.error("Unhandled API error:", error.message);
@@ -57,8 +72,8 @@ mongoose
     .then(() => {
         console.log("MongoDB connected");
 
-        app.listen(process.env.PORT, () => {
-            console.log(`Server running on port ${process.env.PORT}`);
+        app.listen(PORT, "0.0.0.0", () => {
+            console.log(`Server running on port ${PORT}`);
         });
     })
     .catch((error) => {
