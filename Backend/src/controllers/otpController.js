@@ -35,11 +35,16 @@ const sendEmailOTP = async (req, res) => {
         });
 
     } catch (error) {
-        console.error("OTP Error:", error);
+        console.error("EMAIL OTP ERROR:", error);
+        console.error("ERROR MESSAGE:", error.message);
+        console.error("ERROR CODE:", error.code);
+        console.error("ERROR STACK:", error.stack);
 
-        res.status(500).json({
+        return res.status(500).json({
+            success: false,
             message: "Failed to send OTP",
-            error: error.message
+            error: error.message,
+            code: error.code || null
         });
     }
 };
