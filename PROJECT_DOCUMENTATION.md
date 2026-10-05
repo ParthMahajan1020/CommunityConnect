@@ -43,7 +43,7 @@ The primary purpose is to make it easy to discover and contact the right people 
 ### Current implemented features
 The actual implementation includes:
 
-- user registration with email and phone OTP flow
+- user registration with email, phone, location, and password fields
 - login with JWT-based authentication
 - protected frontend routes
 - user profile fetch/update
@@ -62,8 +62,8 @@ These are not fully implemented or not exposed in the app as actual user-facing 
 
 - real geolocation / GPS distance calculation
 - a proper job marketplace layer even though `Job` model exists
-- actual SMS provider integration for phone OTP (development-only log placeholder exists)
-- database-driven email verification flags being applied to the user record after OTP verification
+- SMS-based verification flow for phone numbers
+- OTP-based email or phone verification during registration
 - a full separation between user roles and permissions beyond request ownership checks
 - a formal admin dashboard
 - multi-step onboarding beyond local registration flow
@@ -95,7 +95,6 @@ Additional system pieces that exist in the code:
 
 - JWT for authentication
 - Nodemailer for email delivery
-- OTP records for email and phone verification
 - Email action tokens for accept/reject/complete/incomplete links
 
 ---

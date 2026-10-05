@@ -35,25 +35,6 @@ const sendMail = async (to, subject, html) => {
     return info;
 };
 
-const sendOTPEmail = async (email, otp) => {
-    const subject = "CommunityConnect Email Verification OTP";
-
-    const html = `
-        <div style="font-family: Arial, sans-serif;">
-            <h2>CommunityConnect</h2>
-            <p>Your email verification OTP is:</p>
-
-            <h1>${otp}</h1>
-
-            <p>This OTP will expire in 10 minutes.</p>
-
-            <p>If you did not request this OTP, please ignore this email.</p>
-        </div>
-    `;
-
-    return await sendMail(email, subject, html);
-};
-
 const sendConnectionRequestEmail = async ({ providerEmail, requesterName, type, description, location, acceptUrl, rejectUrl }) => {
     const html = `
         <div style="font-family: Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 24px; color: #0f172a;">
@@ -130,7 +111,6 @@ const sendRequesterFinalStatusEmail = async ({ requesterEmail, providerName, typ
 
 module.exports = {
     sendMail,
-    sendOTPEmail,
     sendConnectionRequestEmail,
     sendProviderStatusEmail,
     sendRequestAcceptedEmail,

@@ -26,24 +26,6 @@ const loginUser = async (credentials) => {
     return response.data;
 };
 
-export const sendEmailOTP = async (email) => {
-    const response = await API.post("/otp/send-email", {
-        email
-    });
-
-    return response.data;
-};
-
-
-export const verifyEmailOTP = async (email, otp) => {
-    const response = await API.post("/otp/verify-email", {
-        email,
-        otp
-    });
-
-    return response.data;
-};
-
 export const getProfile = async () => {
     const token = localStorage.getItem("token");
 
@@ -76,23 +58,6 @@ export const updateProfile = async (profileData) => {
             JSON.stringify(response.data.user)
         );
     }
-
-    return response.data;
-};
-
-export const sendPhoneOTP = async (phone) => {
-    const response = await API.post("/otp/send-phone", {
-        phone
-    });
-
-    return response.data;
-};
-
-export const verifyPhoneOTP = async (phone, otp) => {
-    const response = await API.post("/otp/verify-phone", {
-        phone,
-        otp
-    });
 
     return response.data;
 };

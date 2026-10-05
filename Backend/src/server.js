@@ -6,7 +6,6 @@ const User = require("./models/User");
 const connectionRoutes = require("./routes/connectionRoutes");
 const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
-const otpRoutes = require("./routes/otpRoutes");
 const bloodRoutes = require("./routes/bloodRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const emailActionRoutes = require("./routes/emailActionRoutes");
@@ -56,7 +55,6 @@ app.get("/api/users", async (req, res) => {
 app.use("/api/connections", connectionRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
-app.use("/api/otp", otpRoutes);
 app.use("/api/blood", bloodRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/email-actions", emailActionRoutes);

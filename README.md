@@ -20,8 +20,8 @@ Instead of depending on scattered WhatsApp groups, social media posts, or word-o
 - User registration and login
 - JWT-based authentication
 - Password hashing using bcrypt
-- Email OTP verification
-- Phone verification
+- Email and phone stored as account details for the current MVP
+- No OTP verification required during registration for the current scope
 - Protected routes
 - User profile management
 - Profile image support
