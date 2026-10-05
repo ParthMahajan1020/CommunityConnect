@@ -1,8 +1,21 @@
 const crypto = require("crypto");
-const PhoneOTP = require("../models/PhoneOTP");
 
+const PhoneOTP = require("../models/PhoneOTP");
 const OTP = require("../models/OTP");
-const { sendOTPEmail } = require("../services/emailService");
+
+const emailService = require("../services/emailService");
+
+console.log(
+    "EMAIL SERVICE PATH:",
+    require.resolve("../services/emailService")
+);
+
+console.log(
+    "EMAIL SERVICE EXPORTS:",
+    Object.keys(emailService)
+);
+
+const { sendOTPEmail } = emailService;
 
 const sendEmailOTP = async (req, res) => {
     try {
