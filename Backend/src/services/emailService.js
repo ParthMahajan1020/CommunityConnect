@@ -1,7 +1,20 @@
 const nodemailer = require("nodemailer");
 
 const escapeHtml = (value = "") => String(value).replace(/[&<>'"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" }[character]));
-const transporter = nodemailer.createTransport({ service: "gmail", auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASSWORD } });
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+    },
+
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 10000
+});
 const button = (url, label, color) => `<a href="${url}" style="display:inline-block;margin:8px;padding:13px 20px;border-radius:9px;background:${color};color:#fff;text-decoration:none;font-weight:700">${label}</a>`;
 const layout = (title, body) => `<div style="margin:0;padding:32px 16px;background:#f4f7fb;font-family:Arial,sans-serif;color:#172033"><div style="max-width:600px;margin:auto;background:#fff;border-radius:18px;padding:32px;box-shadow:0 8px 28px rgba(15,23,42,.08)"><h1 style="margin:0;color:#1d4ed8">CommunityConnect</h1><p style="color:#64748b;margin:6px 0 26px">Help is closer than you think.</p><h2>${escapeHtml(title)}</h2>${body}<hr style="border:0;border-top:1px solid #e5e7eb;margin:28px 0 16px"><p style="font-size:12px;color:#94a3b8">This message was sent by CommunityConnect. If you did not expect it, you can ignore it.</p></div></div>`;
 const details = ({ type, description, location, status }) => `<div style="padding:18px;background:#f8fafc;border-radius:12px"><p><strong>Request type:</strong> ${escapeHtml(type)}</p><p><strong>Location:</strong> ${escapeHtml(location)}</p>${description ? `<p><strong>Details:</strong> ${escapeHtml(description)}</p>` : ""}<p><strong>Current status:</strong> ${escapeHtml(status)}</p></div>`;
