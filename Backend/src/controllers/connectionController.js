@@ -22,19 +22,120 @@ const createConnectionRequest = async (req, res) => {
     try {
         const { providerId, type, description, location } = req.body;
         const requesterId = req.userId;
-        if (!isValidId(providerId) || !type || !description?.trim() || !location?.trim()) return res.status(400).json({ message: "Provide a valid provider, type, description and location." });
-        if (!["BLOOD", "SERVICE"].includes(type.toUpperCase())) return res.status(400).json({ message: "Invalid request type." });
-        if (description.trim().length < 8 || description.trim().length > 1000) return res.status(400).json({ message: "Description must be between 8 and 1000 characters." });
-        if (requesterId === providerId) return res.status(400).json({ message: "You cannot send a request to yourself." });
-        const [requester, provider] = await Promise.all([User.findById(requesterId), User.findById(providerId)]);
-        if (!requester || !provider) return res.status(404).json({ message: "Requester or provider not found." });
-        const existing = await ConnectionRequest.findOne({ requesterId, providerId, type: type.toUpperCase(), status: { $in: ["PENDING", "ACCEPTED"] } });
-        if (existing) return res.status(409).json({ message: "You already have an active request with this person." });
-        const request = await ConnectionRequest.create({ requesterId, providerId, type: type.toUpperCase(), description: description.trim(), location: location.trim() });
-        const urls = await createActionUrls({ requestId: request._id, actorId: provider._id, actions: ["accept", "reject"] });
-        await sendConnectionRequestEmail({ providerEmail: provider.email, requesterName: requester.name, type: request.type, description: request.description, location: request.location, acceptUrl: urls.accept, rejectUrl: urls.reject });
-        res.status(201).json({ message: "Connection request sent successfully.", request });
-    } catch (error) { console.error("Create connection request error:", error.message); res.status(500).json({ message: "Unable to send the request right now." }); }
+
+        if (
+            !isValidId(providerId) ||
+            !type ||
+            !description?.trim() ||
+            !location?.trim()
+        ) {
+            return res.status(400).json({
+                message: "Provide a valid provider, type, description and location."
+            });
+        }
+
+        if (!["BLOOD", "SERVICE"].includes(type.toUpperCase())) {
+            return res.status(400).json({
+                message: "Invalid request type."
+            });
+        }
+
+        if (
+            description.trim().length < 8 ||
+            description.trim().length > 1000
+        ) {
+            return res.status(400).json({
+                message: "Description must be between 8 and 1000 characters."
+            });
+        }
+
+        if (requesterId === providerId) {
+            return res.status(400).json({
+                message: "You cannot send a request to yourself."
+            });
+        }
+
+        const [requester, provider] = await Promise.all([
+            User.findById(requesterId),
+            User.findById(providerId)
+        ]);
+
+        if (!requester || !provider) {
+            return res.status(404).json({
+                message: "Requester or provider not found."
+            });
+        }
+
+        const normalizedType = type.toUpperCase();
+
+        const existing = await ConnectionRequest.findOne({
+            requesterId,
+            providerId,
+            type: normalizedType,
+            status: { $in: ["PENDING", "ACCEPTED"] }
+        });
+
+        if (existing) {
+            return res.status(409).json({
+                message: "You already have an active request with this person."
+            });
+        }
+
+        // Create the request first
+        const request = await ConnectionRequest.create({
+            requesterId,
+            providerId,
+            type: normalizedType,
+            description: description.trim(),
+            location: location.trim()
+        });
+
+        // Try sending email, but don't let email failure
+        // make the connection request fail.
+        try {
+            const urls = await createActionUrls({
+                requestId: request._id,
+                actorId: provider._id,
+                actions: ["accept", "reject"]
+            });
+
+            await sendConnectionRequestEmail({
+                providerEmail: provider.email,
+                requesterName: requester.name,
+                type: request.type,
+                description: request.description,
+                location: request.location,
+                acceptUrl: urls.accept,
+                rejectUrl: urls.reject
+            });
+
+            console.log(
+                "Connection request email sent successfully to:",
+                provider.email
+            );
+        } catch (emailError) {
+            console.error(
+                "Connection request email failed:",
+                emailError.message
+            );
+        }
+
+        // Request is successful even if email fails
+        return res.status(201).json({
+            message: "Connection request sent successfully.",
+            request
+        });
+
+    } catch (error) {
+        console.error(
+            "Create connection request error:",
+            error.message
+        );
+
+        return res.status(500).json({
+            message: "Unable to send the request right now."
+        });
+    }
 };
 
 const getProviderRequests = async (req, res) => {
