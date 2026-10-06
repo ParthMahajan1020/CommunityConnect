@@ -1,43 +1,27 @@
 const API_BASE_URL =
     window.__APP_CONFIG__?.API_BASE_URL ||
     (window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1"
+    window.location.hostname === "127.0.0.1"
         ? "http://localhost:5000/api"
         : "https://communityconnect-backend-2vy1.onrender.com/api");
 
 const feedbackForm = document.getElementById("feedbackForm");
-
 const formMessage = document.getElementById("formMessage");
-
 const submitButton = document.getElementById("submitButton");
-
 const buttonText = document.getElementById("buttonText");
-
 const buttonLoader = document.getElementById("buttonLoader");
+const additionalFeedback = document.getElementById("additionalFeedback");
+const characterCount = document.getElementById("characterCount");
 
-const additionalFeedback =
-    document.getElementById("additionalFeedback");
-
-const characterCount =
-    document.getElementById("characterCount");
-
-
-// Character counter
 additionalFeedback.addEventListener("input", () => {
-    characterCount.textContent =
-        additionalFeedback.value.length;
+    characterCount.textContent = additionalFeedback.value.length;
 });
 
-
-// Show message
 function showMessage(message, type) {
     formMessage.textContent = message;
-
     formMessage.className = `form-message ${type}`;
 }
 
-
-// Loading state
 function setLoading(isLoading) {
     submitButton.disabled = isLoading;
 
@@ -50,8 +34,6 @@ function setLoading(isLoading) {
     }
 }
 
-
-// Get selected radio value
 function getRadioValue(name) {
     const selected = document.querySelector(
         `input[name="${name}"]:checked`
@@ -60,15 +42,11 @@ function getRadioValue(name) {
     return selected ? selected.value : null;
 }
 
-
-// Submit feedback
 feedbackForm.addEventListener("submit", async (event) => {
-
     event.preventDefault();
 
     showMessage("", "");
 
-    // Existing authentication token
     const token =
         localStorage.getItem("token") ||
         localStorage.getItem("authToken");
@@ -78,51 +56,25 @@ feedbackForm.addEventListener("submit", async (event) => {
             "Please log in before submitting feedback.",
             "error"
         );
-
         return;
     }
 
-
     const feedbackData = {
-
-        userType:
-            getRadioValue("userType"),
-
-        easeOfUse:
-            getRadioValue("easeOfUse"),
-
-        websiteUnderstanding:
-            getRadioValue("websiteUnderstanding"),
-
-        usefulness:
-            getRadioValue("usefulness"),
-
-        findingOption:
-            getRadioValue("findingOption"),
-
-        designRating:
-            getRadioValue("designRating"),
-
-        overallExperience:
-            Number(
-                getRadioValue("overallExperience")
-            ),
-
-        communityUsefulness:
-            getRadioValue("communityUsefulness"),
-
-        useAgain:
-            getRadioValue("useAgain"),
-
-        recommend:
-            getRadioValue("recommend"),
-
-        additionalFeedback:
-            additionalFeedback.value.trim()
+        userType: getRadioValue("userType"),
+        easeOfUse: getRadioValue("easeOfUse"),
+        websiteUnderstanding: getRadioValue("websiteUnderstanding"),
+        usefulness: getRadioValue("usefulness"),
+        findingOption: getRadioValue("findingOption"),
+        designRating: getRadioValue("designRating"),
+        overallExperience: Number(
+            getRadioValue("overallExperience")
+        ),
+        communityUsefulness: getRadioValue("communityUsefulness"),
+        useAgain: getRadioValue("useAgain"),
+        recommend: getRadioValue("recommend"),
+        additionalFeedback: additionalFeedback.value.trim()
     };
 
-
-    // Frontend validation
     const requiredFields = [
         feedbackData.userType,
         feedbackData.easeOfUse,
@@ -136,7 +88,6 @@ feedbackForm.addEventListener("submit", async (event) => {
         feedbackData.recommend
     ];
 
-
     if (
         requiredFields.some(
             (value) =>
@@ -149,30 +100,23 @@ feedbackForm.addEventListener("submit", async (event) => {
             "Please answer all required questions.",
             "error"
         );
-
         return;
     }
 
-
     try {
-
         setLoading(true);
-
 
         const response = await fetch(
             `${API_BASE_URL}/feedback`,
             {
                 method: "POST",
-
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+                    Authorization: `Bearer ${token}`
                 },
-
                 body: JSON.stringify(feedbackData)
             }
         );
-
 
         const responseText = await response.text();
 
@@ -182,9 +126,18 @@ feedbackForm.addEventListener("submit", async (event) => {
             try {
                 data = JSON.parse(responseText);
             } catch {
-                console.error("Invalid JSON response:", responseText);
+                console.error(
+                    "Server returned invalid JSON:",
+                    responseText
+                );
             }
         }
+
+        console.log("Feedback response:", {
+            status: response.status,
+            url: response.url,
+            data
+        });
 
         if (!response.ok) {
             throw new Error(
@@ -193,20 +146,15 @@ feedbackForm.addEventListener("submit", async (event) => {
             );
         }
 
-
         showMessage(
             "Thank you! Your feedback has been submitted successfully.",
             "success"
         );
 
-
         feedbackForm.reset();
-
         characterCount.textContent = "0";
 
-
     } catch (error) {
-
         console.error(
             "Feedback submission error:",
             error
@@ -217,11 +165,7 @@ feedbackForm.addEventListener("submit", async (event) => {
             "Something went wrong. Please try again.",
             "error"
         );
-
     } finally {
-
         setLoading(false);
-
     }
-
 });
