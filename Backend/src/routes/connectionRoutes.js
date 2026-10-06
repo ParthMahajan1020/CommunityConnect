@@ -1,5 +1,6 @@
 const express = require("express");
 const authMiddleware = require("../middleware/authMiddleware");
+const { handleRequestAction } = require("../controllers/emailActionController");
 const { getMatches, createConnectionRequest, getProviderRequests, getRequesterRequests, updateRequestStatus } = require("../controllers/connectionController");
 const router = express.Router();
 router.get("/matches", authMiddleware, getMatches);
@@ -7,4 +8,5 @@ router.post("/request", authMiddleware, createConnectionRequest);
 router.get("/requests/sent", authMiddleware, getRequesterRequests);
 router.get("/requests/received", authMiddleware, getProviderRequests);
 router.patch("/requests/:requestId/status", authMiddleware, updateRequestStatus);
+router.get("/email-action/:token", handleRequestAction);
 module.exports = router;

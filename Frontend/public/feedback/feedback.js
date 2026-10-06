@@ -35,7 +35,20 @@ additionalFeedback.addEventListener("input", () => {
 function showMessage(message, type) {
     formMessage.textContent = message;
 
-    formMessage.className = `form-message ${type}`;
+    formMessage.className = "form-message";
+
+    if (type) {
+        formMessage.classList.add(type);
+    }
+}
+
+
+function getAuthToken() {
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken") ||
+        ""
+    );
 }
 
 
@@ -70,10 +83,7 @@ feedbackForm.addEventListener("submit", async (event) => {
 
     showMessage("", "");
 
-    // Existing authentication token
-    const token =
-        localStorage.getItem("token") ||
-        localStorage.getItem("authToken");
+    const token = getAuthToken();
 
     if (!token) {
         showMessage(

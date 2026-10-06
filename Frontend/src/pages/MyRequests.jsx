@@ -26,14 +26,31 @@ function RequestCard({ request, received, busy, onUpdate }) {
 function MyRequests() {
     const [sent, setSent] = useState([]); const [received, setReceived] = useState([]);
     const [loading, setLoading] = useState(true); const [busy, setBusy] = useState(null); const [error, setError] = useState("");
+    const [flashMessage, setFlashMessage] = useState("");
     const load = useCallback(async () => {
         try { setError(""); const [sentResponse, receivedResponse] = await Promise.all([getSentRequests(), getReceivedRequests()]); setSent(sentResponse.requests || []); setReceived(receivedResponse.requests || []); }
         catch (requestError) { setError(requestError.response?.data?.message || "Unable to connect to CommunityConnect. Please try again."); }
         finally { setLoading(false); }
     }, []);
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const action = params.get("action");
+        if (action === "accepted") {
+            setFlashMessage("Request accepted successfully.");
+        } else if (action === "rejected") {
+            setFlashMessage("Request rejected successfully.");
+        } else if (action === "completed") {
+            setFlashMessage("Request marked as completed.");
+        } else if (action === "incompleted") {
+            setFlashMessage("Request marked as incomplete.");
+        }
+        if (action) {
+            window.history.replaceState({}, "", "/requests");
+        }
+    }, []);
     useEffect(() => { const timer = setTimeout(() => { void load(); }, 0); return () => clearTimeout(timer); }, [load]);
     const update = async (requestId, status) => { try { setBusy(requestId); setError(""); await updateConnectionRequestStatus(requestId, status); await load(); } catch (requestError) { setError(requestError.response?.data?.message || "Unable to update this request."); } finally { setBusy(null); } };
     if (loading) return <main className="mx-auto max-w-6xl px-6 py-16"><div className="grid gap-6 md:grid-cols-2">{[1, 2].map((item) => <div key={item} className="h-64 animate-pulse rounded-3xl bg-white/70" />)}</div></main>;
-    return <main className="mx-auto max-w-6xl px-6 py-12"><header className="mb-10 text-center"><p className="font-bold tracking-widest text-blue-600">COMMUNITY ACTIVITY</p><h1 className="mt-2 text-4xl font-extrabold">My Requests</h1><p className="mt-3 text-gray-500">Track each request from first contact to its outcome.</p></header>{error && <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700">{error}</div>}<section className="mb-12"><div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-bold">Requests Sent</h2><span className="text-sm text-gray-500">{sent.length} total</span></div>{sent.length ? <div className="grid gap-6 md:grid-cols-2">{sent.map((request) => <RequestCard key={request._id} request={request} busy={busy === request._id} onUpdate={update} />)}</div> : <div className="rounded-3xl border bg-white/80 p-10 text-center text-gray-500">You have not sent any requests yet.</div>}</section><section><div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-bold">Requests Received</h2><span className="text-sm text-gray-500">{received.length} total</span></div>{received.length ? <div className="grid gap-6 md:grid-cols-2">{received.map((request) => <RequestCard key={request._id} request={request} received busy={busy === request._id} onUpdate={update} />)}</div> : <div className="rounded-3xl border bg-white/80 p-10 text-center text-gray-500">You do not have any received requests yet.</div>}</section></main>;
+    return <main className="mx-auto max-w-6xl px-6 py-12"><header className="mb-10 text-center"><p className="font-bold tracking-widest text-blue-600">COMMUNITY ACTIVITY</p><h1 className="mt-2 text-4xl font-extrabold">My Requests</h1><p className="mt-3 text-gray-500">Track each request from first contact to its outcome.</p></header>{flashMessage && <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-700">{flashMessage}</div>}{error && <div className="mb-6 rounded-xl border border-rose-200 bg-rose-50 p-4 text-rose-700">{error}</div>}<section className="mb-12"><div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-bold">Requests Sent</h2><span className="text-sm text-gray-500">{sent.length} total</span></div>{sent.length ? <div className="grid gap-6 md:grid-cols-2">{sent.map((request) => <RequestCard key={request._id} request={request} busy={busy === request._id} onUpdate={update} />)}</div> : <div className="rounded-3xl border bg-white/80 p-10 text-center text-gray-500">You have not sent any requests yet.</div>}</section><section><div className="mb-5 flex items-center justify-between"><h2 className="text-2xl font-bold">Requests Received</h2><span className="text-sm text-gray-500">{received.length} total</span></div>{received.length ? <div className="grid gap-6 md:grid-cols-2">{received.map((request) => <RequestCard key={request._id} request={request} received busy={busy === request._id} onUpdate={update} />)}</div> : <div className="rounded-3xl border bg-white/80 p-10 text-center text-gray-500">You do not have any received requests yet.</div>}</section></main>;
 }
 export default MyRequests;

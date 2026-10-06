@@ -1,9 +1,12 @@
 const bcrypt = require('bcryptjs');
-const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const { createRegistrationOTP } = require('../controllers/otpController');
+const { sendEmailOTPEmail } = require('../services/emailService');
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const validatePhone = (value) => /^\+?[0-9\s\-()]{7,20}$/.test(value.trim());
+const OTP_EXPIRY_MINUTES = Number(process.env.OTP_EXPIRY_MINUTES || 10);
 
 const registerUser = async (req, res) => {
     try {
@@ -12,7 +15,8 @@ const registerUser = async (req, res) => {
             email,
             phone,
             location,
-            password
+            password,
+            confirmPassword
         } = req.body;
 
         const cleanedName = typeof name === 'string' ? name.trim() : '';
@@ -20,34 +24,35 @@ const registerUser = async (req, res) => {
         const cleanedPhone = typeof phone === 'string' ? phone.trim() : '';
         const cleanedLocation = typeof location === 'string' ? location.trim() : '';
         const cleanedPassword = typeof password === 'string' ? password : '';
+        const cleanedConfirmPassword = typeof confirmPassword === 'string' ? confirmPassword : '';
 
-        if (
-            !cleanedName ||
-            !cleanedEmail ||
-            !cleanedPhone ||
-            !cleanedLocation ||
-            !cleanedPassword
-        ) {
+        if (!cleanedName || !cleanedEmail || !cleanedPhone || !cleanedLocation || !cleanedPassword || !cleanedConfirmPassword) {
             return res.status(400).json({
-                message: "All fields are required"
+                message: 'All fields are required.'
             });
         }
 
         if (!validateEmail(cleanedEmail)) {
             return res.status(400).json({
-                message: "Please enter a valid email address"
+                message: 'Please enter a valid email address.'
             });
         }
 
         if (!validatePhone(cleanedPhone)) {
             return res.status(400).json({
-                message: "Please enter a valid phone number"
+                message: 'Please enter a valid phone number.'
             });
         }
 
         if (cleanedPassword.length < 6) {
             return res.status(400).json({
-                message: "Password must be at least 6 characters long"
+                message: 'Password must be at least 6 characters long.'
+            });
+        }
+
+        if (cleanedPassword !== cleanedConfirmPassword) {
+            return res.status(400).json({
+                message: 'Passwords do not match.'
             });
         }
 
@@ -59,39 +64,40 @@ const registerUser = async (req, res) => {
         });
 
         if (existingUser) {
-            return res.status(400).json({
-                message: "Email or phone number already registered"
+            return res.status(409).json({
+                message: 'This email or phone number is already registered.'
             });
         }
 
-        const hashedPassword = await bcrypt.hash(
-            cleanedPassword,
-            10
-        );
-
-        const user = await User.create({
-            name: cleanedName,
+        const hashedPassword = await bcrypt.hash(cleanedPassword, 12);
+        const { otp } = await createRegistrationOTP({
             email: cleanedEmail,
-            phone: cleanedPhone,
-            location: cleanedLocation,
-            password: hashedPassword
-        });
-
-        res.status(201).json({
-            message: "User registered successfully",
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                phone: user.phone,
-                location: user.location
+            pendingUser: {
+                name: cleanedName,
+                email: cleanedEmail,
+                phone: cleanedPhone,
+                location: cleanedLocation,
+                password: hashedPassword
             }
         });
 
+        await sendEmailOTPEmail({
+            to: cleanedEmail,
+            otp,
+            expiryMinutes: OTP_EXPIRY_MINUTES
+        });
+
+        return res.status(200).json({
+            success: true,
+            requiresEmailVerification: true,
+            message: 'Verification code sent to your email. Please verify to complete registration.',
+            email: cleanedEmail,
+            expiresInMinutes: OTP_EXPIRY_MINUTES
+        });
     } catch (error) {
-        res.status(500).json({
-            message: "Registration failed",
-            error: error.message
+        console.error('Registration error:', error.message);
+        return res.status(500).json({
+            message: 'Registration failed. Please try again.'
         });
     }
 };
@@ -103,7 +109,7 @@ const loginUser = async (req, res) => {
 
         if (!normalizedEmail || !password) {
             return res.status(400).json({
-                message: 'Email and password are required'
+                message: 'Email and password are required.'
             });
         }
 
@@ -111,7 +117,14 @@ const loginUser = async (req, res) => {
 
         if (!user) {
             return res.status(401).json({
-                message: 'Invalid email or password'
+                message: 'Invalid email or password.'
+            });
+        }
+
+        const requiresEmailVerification = user.emailVerified === false;
+        if (requiresEmailVerification) {
+            return res.status(403).json({
+                message: 'Please verify your email before logging in.'
             });
         }
 
@@ -122,7 +135,7 @@ const loginUser = async (req, res) => {
 
         if (!isPasswordCorrect) {
             return res.status(401).json({
-                message: 'Invalid email or password'
+                message: 'Invalid email or password.'
             });
         }
 
@@ -144,18 +157,18 @@ const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                location: user.location
+                location: user.location,
+                emailVerified: user.emailVerified
             }
         });
 
     } catch (error) {
-        res.status(500).json({
-            message: 'Login failed',
-            error: error.message
+        console.error('Login error:', error.message);
+        return res.status(500).json({
+            message: 'Login failed. Please try again.'
         });
     }
 };
-
 
 module.exports = {
     registerUser,
