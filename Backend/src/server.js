@@ -8,7 +8,6 @@ const authRoutes = require("./routes/authRoutes");
 const userRoutes = require("./routes/userRoutes");
 const bloodRoutes = require("./routes/bloodRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
-const emailActionRoutes = require("./routes/emailActionRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 
 const app = express();
@@ -57,7 +56,6 @@ app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/blood", bloodRoutes);
 app.use("/api/services", serviceRoutes);
-app.use("/api/email-actions", emailActionRoutes);
 app.use("/api/feedback", feedbackRoutes);
 
 app.use((error, req, res, next) => {

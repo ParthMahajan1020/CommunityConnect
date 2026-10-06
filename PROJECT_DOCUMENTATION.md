@@ -1,10 +1,10 @@
 # CommunityConnect Project Documentation
 
-This document describes the actual code in this repository as it currently exists. It is the source-of-truth documentation for developers working on the project.
+This document contains a legacy implementation inventory that predates the authentication and email-action rollback. References below to OTP, email delivery, and email-action links are historical and do not describe active code. For current behavior, use the root README and the implementation.
 
 Important note: the project snapshot currently contains a real backend `.env` file with credentials and tokens. This file is not copied here. Environment variable names are documented, but their values are intentionally omitted.
 
-Also, the repository currently does not contain a top-level README at the CommunityConnect project root. Where that documentation is missing or inconsistent with the code, the code takes priority.
+Also, the repository currently does not contain a top-level README at the CommunityConnect project root. Where documentation is missing or inconsistent with the code, the code takes priority.
 
 ---
 
@@ -1567,10 +1567,6 @@ The project uses the following variables in the backend:
 | `MONGO_URI` | `server.js` | MongoDB connection string | Yes |
 | `JWT_SECRET` | `authController.js`, `authMiddleware.js` | JWT signing and verification | Yes |
 | `FRONTEND_URL` | `server.js` | CORS allowed frontend origin | Recommended |
-| `EMAIL_USER` | `emailService.js` | Gmail sender account | Yes |
-| `EMAIL_PASSWORD` | `emailService.js` | Gmail app password / account secret | Yes |
-| `BACKEND_URL` | `emailActionTokenService.js` | base URL used in email action links | Recommended |
-| `NODE_ENV` | `otpController.js` | development-only fallback logic for phone OTP logging | Optional |
 
 Important: actual values should never be disclosed in project documentation.
 
@@ -1587,7 +1583,6 @@ Important: actual values should never be disclosed in project documentation.
 | `cors` | enable frontend-backend requests | `server.js` |
 | `bcryptjs` | password hashing | `authController.js` |
 | `jsonwebtoken` | JWT creation and verification | `authController.js`, `authMiddleware.js` |
-| `nodemailer` | send OTP and request emails | `emailService.js` |
 
 ### Backend dev dependency
 | Package | Purpose |
@@ -1621,8 +1616,6 @@ Important: actual values should never be disclosed in project documentation.
 | User registration | `Register.jsx` | `POST /api/auth/register` | `authController.js`, `authRoutes.js` | `User` |
 | Login | `Login.jsx` | `POST /api/auth/login` | `authController.js`, `authRoutes.js` | `User` |
 | Profile fetch/update | `Profile.jsx` | `GET /api/users/me`, `PUT /api/users/me` | `userController.js`, `userRoutes.js` | `User` |
-| Email OTP | `Register.jsx` | `POST /api/otp/send-email`, `POST /api/otp/verify-email` | `otpController.js`, `otpRoutes.js` | `OTP` |
-| Phone OTP | `Register.jsx` | `POST /api/otp/send-phone`, `POST /api/otp/verify-phone` | `otpController.js`, `otpRoutes.js` | `PhoneOTP` |
 | Blood donor registration | `BloodDonor.jsx` | `POST /api/blood/register` | `bloodController.js`, `bloodRoutes.js` | `BloodDonor` |
 | Blood search | `FindBlood.jsx` | `GET /api/connections/matches` | `connectionController.js`, `matchingService.js` | `BloodDonor` |
 | Service registration | `ServiceProvider.jsx` | `POST /api/services/register` | `serviceController.js`, `serviceRoutes.js` | `ServiceProvider` |
@@ -1630,7 +1623,6 @@ Important: actual values should never be disclosed in project documentation.
 | Request create | `FindBlood.jsx`, `FindService.jsx` | `POST /api/connections/request` | `connectionController.js`, `connectionRoutes.js` | `ConnectionRequest` |
 | Request tracking | `MyRequests.jsx` | `GET /api/connections/requests/sent`, `GET /api/connections/requests/received` | `connectionController.js`, `connectionRoutes.js` | `ConnectionRequest` |
 | Request status update | `MyRequests.jsx` | `PATCH /api/connections/requests/:requestId/status` | `connectionController.js`, `connectionRoutes.js` | `ConnectionRequest` |
-| Email action handling | email links | `GET /api/email-actions/:token` | `emailActionController.js`, `emailActionRoutes.js` | `EmailActionToken`, `ConnectionRequest` |
 | Job-type model exists | not used in current frontend | not active | `matchingService.js`, `Job.js` | `Job` |
 
 ---
@@ -1830,9 +1822,11 @@ CommunityConnect is a community-help platform centered around blood donations an
 - Axios calls the backend API
 - Express routes delegate to controllers
 - controllers perform validation and database operations
-- service modules handle matching and email workflows
-- MongoDB stores users, donors, providers, requests, and OTP records
+- service modules handle matching
+- MongoDB stores users, donors, providers, and requests
 
-The most important business flow is the connection-request lifecycle: create request -> provider receives email -> provider accepts/rejects -> requester is notified -> if accepted, requester marks result as complete or incomplete.
+Authentication uses email and password with bcrypt-hashed passwords and JWT sessions. No verification step is required during registration or login.
+
+The most important business flow is the connection-request lifecycle: create request -> recipient sees it on the Requests page -> recipient accepts/rejects in the website -> requester marks an accepted request complete or incomplete in the website.
 
 This is the core of the platform’s internal logic.

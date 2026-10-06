@@ -32,11 +32,6 @@ const userSchema = new mongoose.Schema(
             required: true
         },
 
-        emailVerified: {
-            type: Boolean,
-            default: false
-        },
-
         profileImage: {
             type: String,
             default: ''

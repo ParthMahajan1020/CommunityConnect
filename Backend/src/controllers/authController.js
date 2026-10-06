@@ -1,12 +1,9 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const { createRegistrationOTP } = require('../controllers/otpController');
-const { sendEmailOTPEmail } = require('../services/emailService');
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 const validatePhone = (value) => /^\+?[0-9\s\-()]{7,20}$/.test(value.trim());
-const OTP_EXPIRY_MINUTES = Number(process.env.OTP_EXPIRY_MINUTES || 10);
 
 const registerUser = async (req, res) => {
     try {
@@ -70,29 +67,17 @@ const registerUser = async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(cleanedPassword, 12);
-        const { otp } = await createRegistrationOTP({
+        await User.create({
+            name: cleanedName,
             email: cleanedEmail,
-            pendingUser: {
-                name: cleanedName,
-                email: cleanedEmail,
-                phone: cleanedPhone,
-                location: cleanedLocation,
-                password: hashedPassword
-            }
+            phone: cleanedPhone,
+            location: cleanedLocation,
+            password: hashedPassword
         });
 
-        await sendEmailOTPEmail({
-            to: cleanedEmail,
-            otp,
-            expiryMinutes: OTP_EXPIRY_MINUTES
-        });
-
-        return res.status(200).json({
+        return res.status(201).json({
             success: true,
-            requiresEmailVerification: true,
-            message: 'Verification code sent to your email. Please verify to complete registration.',
-            email: cleanedEmail,
-            expiresInMinutes: OTP_EXPIRY_MINUTES
+            message: 'Account created successfully.'
         });
     } catch (error) {
         console.error('Registration error:', error.message);
@@ -118,13 +103,6 @@ const loginUser = async (req, res) => {
         if (!user) {
             return res.status(401).json({
                 message: 'Invalid email or password.'
-            });
-        }
-
-        const requiresEmailVerification = user.emailVerified === false;
-        if (requiresEmailVerification) {
-            return res.status(403).json({
-                message: 'Please verify your email before logging in.'
             });
         }
 
@@ -157,8 +135,7 @@ const loginUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 phone: user.phone,
-                location: user.location,
-                emailVerified: user.emailVerified
+                location: user.location
             }
         });
 

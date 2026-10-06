@@ -9,7 +9,7 @@ The platform currently focuses on two major areas:
 - Blood Donation & Blood Requests
 - Local Services & Community Assistance
 
-Instead of depending on scattered WhatsApp groups, social media posts, or word-of-mouth communication, CommunityConnect provides a centralized platform where users can find the right people, send requests, communicate through email actions, and manage their connections.
+Instead of depending on scattered WhatsApp groups, social media posts, or word-of-mouth communication, CommunityConnect provides a centralized platform where users can find the right people, send requests, and manage their connections in the website.
 
 ---
 
@@ -21,7 +21,7 @@ Instead of depending on scattered WhatsApp groups, social media posts, or word-o
 - JWT-based authentication
 - Password hashing using bcrypt
 - Email and phone stored as account details for the current MVP
-- No OTP verification required during registration for the current scope
+- Registration and login use email and password without email or phone verification
 - Protected routes
 - User profile management
 - Profile image support
@@ -68,16 +68,9 @@ Users can:
 - View received requests
 - Prevent duplicate active requests
 
-### Email-Based Request Actions
+### In-App Request Actions
 
-CommunityConnect integrates email actions into the request workflow.
-
-When a provider receives a connection request, they receive an email notification with options to:
-
-- Accept the request directly from email
-- Reject the request directly from email
-
-This reduces the need to constantly open the application to manage requests.
+Recipients accept or reject requests from the Requests page. Requesters can mark accepted requests as completed or incomplete from the same page.
 
 ### Smart Matching
 
@@ -132,7 +125,6 @@ Send Connection Request
 * Mongoose
 * JWT
 * bcrypt
-* Nodemailer
 
 ### Development Tools
 
@@ -274,16 +266,10 @@ User Registration
 Enter User Details
        |
        ↓
-Email OTP Verification
-       |
-       ↓
-Phone Verification
-       |
-       ↓
 Account Created
        |
        ↓
-Login
+Login with Email + Password
        |
        ↓
 JWT Token
@@ -335,8 +321,6 @@ User
 ├── phone
 ├── location
 ├── password
-├── emailVerified
-├── phoneVerified
 └── profileImage
 ```
 
@@ -372,7 +356,6 @@ CommunityConnect implements several security practices:
 * JWT-based authentication
 * Protected API routes
 * Protected frontend routes
-* OTP-based verification
 * Environment variables for sensitive credentials
 * Prevention of duplicate active requests
 * Authentication middleware for protected resources
@@ -393,9 +376,7 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 
 JWT_SECRET=your_jwt_secret
-
-EMAIL_USER=your_email
-EMAIL_PASS=your_email_app_password
+FRONTEND_URL=http://localhost:5173
 ```
 
 Never commit the `.env` file.

@@ -2,8 +2,6 @@ const mongoose = require("mongoose");
 const { findMatches } = require("../services/matchingService");
 const ConnectionRequest = require("../models/ConnectionRequest");
 const User = require("../models/User");
-const { createActionUrls } = require("../services/emailActionTokenService");
-const { sendConnectionRequestEmail } = require("../services/emailService");
 
 const isValidId = (value) => mongoose.isValidObjectId(value);
 
@@ -90,37 +88,6 @@ const createConnectionRequest = async (req, res) => {
             location: location.trim()
         });
 
-        // Try sending email, but don't let email failure
-        // make the connection request fail.
-        try {
-            const urls = await createActionUrls({
-                requestId: request._id,
-                actorId: provider._id,
-                actions: ["accept", "reject"]
-            });
-
-            await sendConnectionRequestEmail({
-                providerEmail: provider.email,
-                requesterName: requester.name,
-                type: request.type,
-                description: request.description,
-                location: request.location,
-                acceptUrl: urls.accept,
-                rejectUrl: urls.reject
-            });
-
-            console.log(
-                "Connection request email sent successfully to:",
-                provider.email
-            );
-        } catch (emailError) {
-            console.error(
-                "Connection request email failed:",
-                emailError.message
-            );
-        }
-
-        // Request is successful even if email fails
         return res.status(201).json({
             message: "Connection request sent successfully.",
             request
