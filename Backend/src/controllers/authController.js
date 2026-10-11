@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 
 const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-const validatePhone = (value) => /^\+?[0-9\s\-()]{7,20}$/.test(value.trim());
+const validatePhone = (value) => /^\+?\d[\d\s()-]{6,19}$/.test(value);
 
 const registerUser = async (req, res) => {
     try {
@@ -12,18 +12,16 @@ const registerUser = async (req, res) => {
             email,
             phone,
             location,
-            password,
-            confirmPassword
-        } = req.body;
+            password
+        } = req.body || {};
 
         const cleanedName = typeof name === 'string' ? name.trim() : '';
         const cleanedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
         const cleanedPhone = typeof phone === 'string' ? phone.trim() : '';
         const cleanedLocation = typeof location === 'string' ? location.trim() : '';
         const cleanedPassword = typeof password === 'string' ? password : '';
-        const cleanedConfirmPassword = typeof confirmPassword === 'string' ? confirmPassword : '';
 
-        if (!cleanedName || !cleanedEmail || !cleanedPhone || !cleanedLocation || !cleanedPassword || !cleanedConfirmPassword) {
+        if (!cleanedName || !cleanedEmail || !cleanedPhone || !cleanedLocation || !cleanedPassword) {
             return res.status(400).json({
                 message: 'All fields are required.'
             });
@@ -41,15 +39,9 @@ const registerUser = async (req, res) => {
             });
         }
 
-        if (cleanedPassword.length < 6) {
+        if (cleanedPassword.length < 8) {
             return res.status(400).json({
-                message: 'Password must be at least 6 characters long.'
-            });
-        }
-
-        if (cleanedPassword !== cleanedConfirmPassword) {
-            return res.status(400).json({
-                message: 'Passwords do not match.'
+                message: 'Password must be at least 8 characters long.'
             });
         }
 

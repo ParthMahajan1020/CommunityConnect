@@ -1,37 +1,37 @@
 import { useState } from "react";
 import { registerServiceProvider } from "../services/api";
 
+const serviceTypes = [
+    "Plumber",
+    "Electrician",
+    "Carpenter",
+    "Painter",
+    "House Help",
+    "Mechanic",
+    "Tutor",
+    "Gardener",
+    "AC Repair",
+    "Appliance Repair",
+    "Other",
+];
+
 function ServiceProvider() {
     const [formData, setFormData] = useState({
         serviceType: "",
         location: "",
-        availability: true
+        availability: true,
     });
 
     const [loading, setLoading] = useState(false);
     const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
-    const serviceTypes = [
-        "Plumber",
-        "Electrician",
-        "Carpenter",
-        "Painter",
-        "House Help",
-        "Mechanic",
-        "Tutor",
-        "Gardener",
-        "AC Repair",
-        "Appliance Repair",
-        "Other"
-    ];
-
     const handleChange = (e) => {
         const { name, value } = e.target;
 
         setFormData((prev) => ({
             ...prev,
-            [name]: value
+            [name]: value,
         }));
 
         setError("");
@@ -41,8 +41,11 @@ function ServiceProvider() {
     const handleAvailability = () => {
         setFormData((prev) => ({
             ...prev,
-            availability: !prev.availability
+            availability: !prev.availability,
         }));
+
+        setError("");
+        setMessage("");
     };
 
     const handleSubmit = async (e) => {
@@ -56,10 +59,16 @@ function ServiceProvider() {
             return;
         }
 
-        const user = JSON.parse(localStorage.getItem("user"));
+        let user;
+
+        try {
+            user = JSON.parse(localStorage.getItem("user"));
+        } catch {
+            user = null;
+        }
 
         if (!user) {
-            setError("Please login first.");
+            setError("Please log in before registering a service.");
             return;
         }
 
@@ -69,7 +78,7 @@ function ServiceProvider() {
             const response = await registerServiceProvider({
                 serviceType: formData.serviceType,
                 location: formData.location.trim(),
-                availability: formData.availability
+                availability: formData.availability,
             });
 
             setMessage(
@@ -80,11 +89,11 @@ function ServiceProvider() {
             setFormData({
                 serviceType: "",
                 location: "",
-                availability: true
+                availability: true,
             });
-        } catch (error) {
+        } catch (err) {
             setError(
-                error.response?.data?.message ||
+                err.response?.data?.message ||
                 "Failed to register as a service provider."
             );
         } finally {
@@ -93,230 +102,265 @@ function ServiceProvider() {
     };
 
     return (
-        <main className="min-h-screen px-6 pb-20">
+        <main className="min-h-screen bg-[#F8FAF9] px-4 py-8 sm:px-6 sm:py-12">
+            <div className="mx-auto max-w-6xl">
 
-            {/* HERO */}
-            <section className="max-w-5xl mx-auto pt-10 md:pt-16 text-center">
+                {/* Hero */}
+                <section className="relative overflow-hidden rounded-[2rem] border border-[#DDE7F3] bg-gradient-to-br from-white via-white to-[#EAF1FA] px-5 py-10 sm:px-10 sm:py-14">
+                    <div className="absolute -right-16 -top-16 h-64 w-64 rounded-full bg-[#6C8FBC]/10 blur-3xl" />
 
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-sm font-semibold">
-                    <span className="w-2 h-2 rounded-full bg-blue-500" />
-                    LOCAL SERVICES
-                </div>
-
-                <h1 className="mt-6 text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900">
-                    Provide
-                    <span className="text-blue-600"> a Service</span>
-                </h1>
-
-                <p className="mt-5 text-lg md:text-xl text-gray-500 max-w-2xl mx-auto leading-relaxed">
-                    Share your skills with people around you and help
-                    your local community.
-                </p>
-            </section>
-
-            {/* FORM */}
-            <section className="max-w-3xl mx-auto mt-12">
-
-                <div className="bg-white/85 backdrop-blur-xl border border-white/70 shadow-2xl rounded-[2rem] p-7 md:p-10">
-
-                    <div className="mb-8">
-                        <h2 className="text-2xl font-bold text-gray-900">
-                            Register your service
-                        </h2>
-
-                        <p className="text-gray-500 mt-1">
-                            Tell people what you can help them with.
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSubmit}>
-
-                        {/* SERVICE TYPE */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                What service do you provide?
-                            </label>
-
-                            <select
-                                name="serviceType"
-                                value={formData.serviceType}
-                                onChange={handleChange}
-                                className="
-                                    w-full
-                                    px-5 py-4
-                                    rounded-2xl
-                                    border border-gray-200
-                                    bg-gray-50/70
-                                    text-gray-900
-                                    outline-none
-                                    transition
-                                    focus:bg-white
-                                    focus:border-blue-400
-                                    focus:ring-4
-                                    focus:ring-blue-50
-                                "
-                            >
-                                <option value="">
-                                    Select a service
-                                </option>
-
-                                {serviceTypes.map((service) => (
-                                    <option
-                                        key={service}
-                                        value={service}
-                                    >
-                                        {service}
-                                    </option>
-                                ))}
-                            </select>
+                    <div className="relative z-10 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#DDE7F3] bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#547BA9]">
+                            <span className="h-2 w-2 rounded-full bg-[#6C8FBC]" />
+                            Share your skills
                         </div>
 
-                        {/* LOCATION */}
-                        <div className="mt-7">
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Service Location
-                            </label>
+                        <h1 className="mt-6 text-3xl font-semibold tracking-tight text-[#24342E] sm:text-5xl">
+                            Your skills.
+                            <br />
+                            Your community.
+                        </h1>
 
-                            <input
-                                type="text"
-                                name="location"
-                                value={formData.location}
-                                onChange={handleChange}
-                                placeholder="Enter your city or area"
-                                className="
-                                    w-full
-                                    px-5 py-4
-                                    rounded-2xl
-                                    border border-gray-200
-                                    bg-gray-50/70
-                                    text-gray-900
-                                    outline-none
-                                    transition
-                                    focus:bg-white
-                                    focus:border-blue-400
-                                    focus:ring-4
-                                    focus:ring-blue-50
-                                "
-                            />
+                        <p className="mt-4 max-w-xl text-sm leading-7 text-[#6F7D76] sm:text-base">
+                            Make your services discoverable to people
+                            around you. Register your expertise and
+                            help your local community find the assistance
+                            they need.
+                        </p>
+                    </div>
+                </section>
 
-                            <p className="text-xs text-gray-400 mt-2">
-                                People nearby will be able to find your service.
+                {/* Registration form */}
+                <div className="mt-7 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+
+                    <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-sm sm:p-8">
+                        <div className="mb-7">
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#6C8FBC]">
+                                Provider registration
+                            </p>
+
+                            <h2 className="mt-2 text-2xl font-semibold text-[#24342E]">
+                                Register your service
+                            </h2>
+
+                            <p className="mt-2 text-sm leading-6 text-[#6F7D76]">
+                                Tell the community what you offer and
+                                where you are available.
                             </p>
                         </div>
 
-                        {/* AVAILABILITY */}
-                        <div className="mt-7">
+                        <form onSubmit={handleSubmit}>
+                            <div>
+                                <label
+                                    htmlFor="provider-service"
+                                    className="mb-2 block text-sm font-medium text-[#34463D]"
+                                >
+                                    What service do you provide?
+                                </label>
 
-                            <div className="flex items-center justify-between">
+                                <select
+                                    id="provider-service"
+                                    name="serviceType"
+                                    value={formData.serviceType}
+                                    onChange={handleChange}
+                                    required
+                                    className="w-full rounded-xl border border-[#E2E9E4] bg-[#FAFBFA] px-4 py-3.5 text-sm text-[#24342E] outline-none transition focus:border-[#6C8FBC] focus:bg-white focus:ring-4 focus:ring-[#EAF1FA]"
+                                >
+                                    <option value="">
+                                        Select your service
+                                    </option>
+
+                                    {serviceTypes.map((service) => (
+                                        <option key={service} value={service}>
+                                            {service}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div className="mt-5">
+                                <label
+                                    htmlFor="provider-location"
+                                    className="mb-2 block text-sm font-medium text-[#34463D]"
+                                >
+                                    Service location
+                                </label>
+
+                                <input
+                                    id="provider-location"
+                                    type="text"
+                                    name="location"
+                                    value={formData.location}
+                                    onChange={handleChange}
+                                    placeholder="e.g. Akurdi, Pune"
+                                    autoComplete="address-level2"
+                                    required
+                                    className="w-full rounded-xl border border-[#E2E9E4] bg-[#FAFBFA] px-4 py-3.5 text-sm text-[#24342E] outline-none transition placeholder:text-[#9AA69F] focus:border-[#6C8FBC] focus:bg-white focus:ring-4 focus:ring-[#EAF1FA]"
+                                />
+
+                                <p className="mt-2 text-xs leading-5 text-[#8A9690]">
+                                    Enter the area where you normally
+                                    provide your service.
+                                </p>
+                            </div>
+
+                            {/* Availability */}
+                            <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-[#E2E9E4] bg-[#FAFBFA] p-4">
                                 <div>
-                                    <p className="font-semibold text-gray-900">
-                                        Availability
+                                    <p className="text-sm font-semibold text-[#24342E]">
+                                        Currently available
                                     </p>
-                                    <p className="text-sm text-gray-500">
-                                        Let people know if you're currently available.
+
+                                    <p className="mt-1 text-xs leading-5 text-[#6F7D76]">
+                                        Let people know if you can take requests.
                                     </p>
                                 </div>
 
                                 <button
                                     type="button"
+                                    role="switch"
+                                    aria-checked={formData.availability}
+                                    aria-label="Currently available"
                                     onClick={handleAvailability}
-                                    className={`relative w-14 h-8 rounded-full transition-colors duration-300 ${formData.availability ? "bg-blue-600" : "bg-gray-300"
-                                        }`}
+                                    className={`relative h-7 w-12 shrink-0 rounded-full transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#EAF1FA] ${
+                                        formData.availability
+                                            ? "bg-[#6C8FBC]"
+                                            : "bg-[#CBD3CE]"
+                                    }`}
                                 >
                                     <span
-                                        className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${formData.availability ? "translate-x-6" : "translate-x-0"
-                                            }`}
+                                        className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
+                                            formData.availability
+                                                ? "left-6"
+                                                : "left-1"
+                                        }`}
                                     />
                                 </button>
                             </div>
+
+                            <div className="mt-3 flex items-center gap-2 text-xs text-[#6F7D76]">
+                                <span
+                                    className={`h-2 w-2 rounded-full ${
+                                        formData.availability
+                                            ? "bg-[#427A65]"
+                                            : "bg-gray-400"
+                                    }`}
+                                />
+                                {formData.availability
+                                    ? "People can see that you're available."
+                                    : "Your status will be marked unavailable."}
+                            </div>
+
+                            {error && (
+                                <div
+                                    role="alert"
+                                    className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
+                                >
+                                    {error}
+                                </div>
+                            )}
+
+                            {message && (
+                                <div
+                                    role="status"
+                                    className="mt-5 rounded-xl border border-[#D7E9DD] bg-[#F0F7F2] px-4 py-3 text-sm text-[#427A65]"
+                                >
+                                    {message}
+                                </div>
+                            )}
+
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24342E] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#344A40] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                                {loading
+                                    ? "Registering service..."
+                                    : "Register as a service provider"}
+                            </button>
+
+                            <p className="mt-4 text-center text-xs leading-5 text-[#8A9690]">
+                                Please provide an accurate service
+                                category and location.
+                            </p>
+                        </form>
+                    </section>
+
+                    {/* Information panel */}
+                    <aside className="flex flex-col rounded-3xl border border-[#DDE7F3] bg-[#EAF1FA]/60 p-6 sm:p-8">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-2xl font-semibold text-[#6C8FBC]">
+                            +
                         </div>
 
-                        {/* ERROR */}
-                        {error && (
-                            <div className="mt-6 px-4 py-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-sm font-medium">
-                                {error}
+                        <p className="mt-7 text-xs font-semibold uppercase tracking-[0.16em] text-[#547BA9]">
+                            How it works
+                        </p>
+
+                        <h2 className="mt-3 text-2xl font-semibold leading-snug text-[#24342E] sm:text-3xl">
+                            Turn your skills into community support.
+                        </h2>
+
+                        <p className="mt-4 text-sm leading-7 text-[#6F7D76]">
+                            CommunityConnect helps people discover
+                            service providers in their local area.
+                            Registering helps others find the support
+                            they're looking for.
+                        </p>
+
+                        <div className="mt-8 space-y-6">
+                            {[
+                                {
+                                    number: "01",
+                                    title: "Register",
+                                    description:
+                                        "Choose your service and enter your location.",
+                                },
+                                {
+                                    number: "02",
+                                    title: "Get discovered",
+                                    description:
+                                        "People can search for your service and area.",
+                                },
+                                {
+                                    number: "03",
+                                    title: "Connect",
+                                    description:
+                                        "Receive connection requests from people who need help.",
+                                },
+                            ].map((item) => (
+                                <div key={item.number} className="flex gap-4">
+                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-[#DDE7F3] bg-white text-xs font-semibold text-[#547BA9]">
+                                        {item.number}
+                                    </div>
+
+                                    <div>
+                                        <h3 className="text-sm font-semibold text-[#24342E]">
+                                            {item.title}
+                                        </h3>
+
+                                        <p className="mt-1 text-sm leading-6 text-[#6F7D76]">
+                                            {item.description}
+                                        </p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        <div className="mt-auto pt-8">
+                            <div className="rounded-2xl border border-white bg-white/80 p-4">
+                                <p className="text-sm font-semibold text-[#24342E]">
+                                    Built around local communities
+                                </p>
+
+                                <p className="mt-1 text-xs leading-5 text-[#6F7D76]">
+                                    Make it easier for people nearby
+                                    to find the services they need.
+                                </p>
                             </div>
-                        )}
-
-                        {/* SUCCESS */}
-                        {message && (
-                            <div className="mt-6 px-4 py-3 rounded-xl bg-green-50 border border-green-100 text-green-600 text-sm font-medium">
-                                {message}
-                            </div>
-                        )}
-
-                        {/* SUBMIT */}
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="
-                                w-full
-                                mt-7
-                                py-4
-                                rounded-2xl
-                                bg-gray-900
-                                text-white
-                                font-semibold
-                                text-lg
-                                hover:bg-black
-                                transition
-                                disabled:opacity-50
-                                disabled:cursor-not-allowed
-                            "
-                        >
-                            {loading
-                                ? "Registering..."
-                                : "Register as Service Provider"}
-                        </button>
-
-                    </form>
+                        </div>
+                    </aside>
                 </div>
-            </section>
-
-            {/* INFO */}
-            <section className="max-w-3xl mx-auto mt-8">
-
-                <div className="grid md:grid-cols-3 gap-4">
-
-                    <div className="bg-white/70 border rounded-2xl p-5">
-                        <p className="text-blue-600 font-bold text-lg">
-                            01
-                        </p>
-                        <h3 className="font-semibold mt-2">
-                            Register
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Tell us what service you provide.
-                        </p>
-                    </div>
-
-                    <div className="bg-white/70 border rounded-2xl p-5">
-                        <p className="text-blue-600 font-bold text-lg">
-                            02
-                        </p>
-                        <h3 className="font-semibold mt-2">
-                            Get discovered
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                            People nearby can find your service.
-                        </p>
-                    </div>
-
-                    <div className="bg-white/70 border rounded-2xl p-5">
-                        <p className="text-blue-600 font-bold text-lg">
-                            03
-                        </p>
-                        <h3 className="font-semibold mt-2">
-                            Help others
-                        </h3>
-                        <p className="text-sm text-gray-500 mt-1">
-                            Receive and respond to service requests.
-                        </p>
-                    </div>
-
-                </div>
-            </section>
-
+            </div>
         </main>
     );
 }

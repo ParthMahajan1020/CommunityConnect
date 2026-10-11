@@ -1,15 +1,15 @@
 :root {
-    --black: #050706;
-    --dark-green: #071714;
-    --green: #0d2922;
-    --cream: #f3f2ee;
+    --black: #f8faf9;
+    --dark-green: #427a65;
+    --green: #ffffff;
+    --cream: #24342e;
     --white: #ffffff;
-    --gray: #a5aaa7;
-    --dark-gray: #171c1a;
-    --border: rgba(243, 242, 238, 0.10);
-    --border-hover: rgba(243, 242, 238, 0.22);
-    --success: #78d6a5;
-    --error: #e88989;
+    --gray: #6f7d76;
+    --dark-gray: #f4f8f6;
+    --border: #e2e9e4;
+    --border-hover: #c9d8cf;
+    --success: #427a65;
+    --error: #c94c55;
 }
 
 * {
@@ -24,13 +24,7 @@ html {
 
 body {
     min-height: 100vh;
-    background:
-        radial-gradient(
-            circle at 50% 0%,
-            rgba(15, 55, 45, 0.45),
-            transparent 45%
-        ),
-        var(--black);
+    background: var(--black);
 
     color: var(--cream);
 
@@ -67,7 +61,7 @@ body {
 
     margin-bottom: 18px;
 
-    color: #9aa09d;
+    color: #6f7d76;
 
     font-size: 11px;
     font-weight: 700;
@@ -112,12 +106,7 @@ body {
 
     padding: 30px;
 
-    background:
-        linear-gradient(
-            145deg,
-            rgba(13, 41, 34, 0.80),
-            rgba(8, 19, 16, 0.92)
-        );
+    background: var(--white);
 
     border: 1px solid var(--border);
     border-radius: 18px;
@@ -132,7 +121,7 @@ body {
 }
 
 .question-number {
-    color: #68716d;
+    color: #6f7d76;
 
     font-size: 12px;
     font-weight: 700;
@@ -153,11 +142,11 @@ body {
 }
 
 .required {
-    color: #b8d8cb;
+    color: #427a65;
 }
 
 .question-subtitle {
-    color: #747c79;
+    color: #6f7d76;
 
     font-size: 13px;
 
@@ -185,7 +174,7 @@ body {
     border: 1px solid transparent;
     border-radius: 10px;
 
-    color: #d0d3d1;
+    color: #24342e;
 
     cursor: pointer;
 
@@ -196,16 +185,21 @@ body {
 }
 
 .option:hover {
-    background: rgba(243, 242, 238, 0.045);
+    background: #f4f8f6;
     border-color: var(--border);
     color: var(--cream);
+}
+
+.option:focus-within {
+    outline: 3px solid rgba(66, 122, 101, 0.18);
+    outline-offset: 2px;
 }
 
 .option input {
     width: 17px;
     height: 17px;
 
-    accent-color: #c8d9d2;
+    accent-color: #427a65;
 
     cursor: pointer;
 }
@@ -245,7 +239,7 @@ body {
     border: 1px solid var(--border);
     border-radius: 12px;
 
-    color: #b7bfbb;
+    color: #6f7d76;
 
     font-size: 16px;
     font-weight: 600;
@@ -259,13 +253,18 @@ body {
 
 .rating-options label:hover span {
     border-color: var(--border-hover);
-    background: rgba(243, 242, 238, 0.04);
+    background: #f4f8f6;
+}
+
+.rating-options input:focus-visible + span {
+    outline: 3px solid rgba(66, 122, 101, 0.25);
+    outline-offset: 3px;
 }
 
 .rating-options input:checked + span {
-    background: var(--cream);
-    color: var(--dark-green);
-    border-color: var(--cream);
+    background: var(--dark-green);
+    color: var(--white);
+    border-color: var(--dark-green);
 
     transform: translateY(-2px);
 }
@@ -276,7 +275,7 @@ body {
 
     margin-top: 9px;
 
-    color: #707874;
+    color: #6f7d76;
 
     font-size: 11px;
 }
@@ -292,7 +291,7 @@ textarea {
 
     padding: 16px;
 
-    background: rgba(0, 0, 0, 0.20);
+    background: #ffffff;
 
     border: 1px solid var(--border);
     border-radius: 12px;
@@ -309,11 +308,12 @@ textarea {
 }
 
 textarea::placeholder {
-    color: #656d69;
+    color: #6f7d76;
 }
 
 textarea:focus {
-    border-color: rgba(243, 242, 238, 0.30);
+    border-color: #427a65;
+    box-shadow: 0 0 0 3px rgba(66, 122, 101, 0.14);
 }
 
 .character-count {
@@ -321,7 +321,7 @@ textarea:focus {
 
     text-align: right;
 
-    color: #626a66;
+    color: #6f7d76;
 
     font-size: 11px;
 }
@@ -375,6 +375,11 @@ textarea:focus {
     transform: translateY(-2px);
 }
 
+.submit-button:focus-visible {
+    outline: 3px solid rgba(66, 122, 101, 0.3);
+    outline-offset: 3px;
+}
+
 .submit-button:active {
     transform: translateY(0);
 }
@@ -395,8 +400,8 @@ textarea:focus {
 
     margin-left: 8px;
 
-    border: 2px solid rgba(7, 23, 20, 0.25);
-    border-top-color: var(--dark-green);
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    border-top-color: var(--white);
 
     border-radius: 50%;
 
