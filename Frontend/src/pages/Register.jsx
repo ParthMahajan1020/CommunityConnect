@@ -41,9 +41,7 @@ function BrandLogo() {
         <span className="block text-lg font-bold tracking-tight text-[#24342E]">
           CommunityConnect
         </span>
-        <span className="block text-xs text-[#6F7D76]">
-          Together, we help.
-        </span>
+        <span className="block text-xs text-[#6F7D76]">Together, we help.</span>
       </div>
     </Link>
   );
@@ -233,7 +231,7 @@ export default function Register() {
     setLoading(true);
 
     try {
-      await registerUser({
+      const response = await registerUser({
         name,
         email,
         phone,
@@ -241,11 +239,10 @@ export default function Register() {
         password,
       });
 
-      navigate("/login", {
+      navigate("/verify-email", {
         replace: true,
         state: {
-          message: "Your account has been created. Please log in.",
-          email,
+          email: response.email || email,
         },
       });
     } catch (err) {
@@ -254,7 +251,7 @@ export default function Register() {
       setError(
         err?.response?.data?.message ||
           err?.response?.data?.error ||
-          "We couldn't create your account. Please try again."
+          "We couldn't create your account. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -272,8 +269,8 @@ export default function Register() {
           {/* Left introduction */}
           <section className="hidden lg:block">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#DCE9E0] bg-[#EDF5EF] px-4 py-2 text-sm font-medium text-[#427A65]">
-              <span className="h-2 w-2 rounded-full bg-[#427A65]" />
-              A community that cares
+              <span className="h-2 w-2 rounded-full bg-[#427A65]" />A community
+              that cares
             </div>
 
             <h1 className="max-w-lg text-5xl font-semibold leading-[1.15] tracking-tight text-[#24342E] xl:text-6xl">

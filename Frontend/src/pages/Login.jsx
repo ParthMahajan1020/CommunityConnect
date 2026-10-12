@@ -32,9 +32,7 @@ function BrandLogo() {
         <span className="block text-lg font-bold tracking-tight text-[#24342E]">
           CommunityConnect
         </span>
-        <span className="block text-xs text-[#6F7D76]">
-          Together, we help.
-        </span>
+        <span className="block text-xs text-[#6F7D76]">Together, we help.</span>
       </div>
     </Link>
   );
@@ -95,10 +93,25 @@ export default function Login() {
 
       navigate(safeDestination, { replace: true });
     } catch (err) {
+      const responseData = err.response?.data;
+
+      if (responseData?.requiresEmailVerification) {
+        navigate("/verify-email", {
+          replace: true,
+          state: {
+            email: responseData.email || email,
+            message:
+              responseData.message ||
+              "Please verify your email address before logging in.",
+          },
+        });
+        return;
+      }
+
       setError(
-        err.response?.data?.message ||
-          err.response?.data?.error ||
-          "Unable to log in. Please check your credentials and try again."
+        responseData?.message ||
+          responseData?.error ||
+          "Unable to log in. Please check your credentials and try again.",
       );
     } finally {
       setLoading(false);
@@ -129,8 +142,8 @@ export default function Login() {
             </h1>
 
             <p className="mt-6 max-w-md text-base leading-8 text-[#6F7D76]">
-              Sign in to find blood donors, discover local services, and
-              stay connected with your community.
+              Sign in to find blood donors, discover local services, and stay
+              connected with your community.
             </p>
 
             <div className="mt-10 max-w-md rounded-3xl border border-[#E2E9E4] bg-white p-6">
@@ -165,8 +178,8 @@ export default function Login() {
                   </h3>
 
                   <p className="mt-2 text-sm leading-6 text-[#6F7D76]">
-                    Access your account and manage your community
-                    connections in one place.
+                    Access your account and manage your community connections in
+                    one place.
                   </p>
                 </div>
               </div>

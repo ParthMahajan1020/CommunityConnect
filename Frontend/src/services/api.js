@@ -12,6 +12,23 @@ const registerUser = async (userData) => {
     return response.data;
 };
 
+const verifyEmailOtp = async (email, otp) => {
+    const response = await API.post("/auth/verify-email", {
+        email,
+        otp
+    });
+
+    return response.data;
+};
+
+const resendEmailOtp = async (email) => {
+    const response = await API.post("/auth/resend-otp", {
+        email
+    });
+
+    return response.data;
+};
+
 const loginUser = async (credentials) => {
     const response = await API.post("/auth/login", credentials);
 
@@ -214,6 +231,8 @@ const logoutUser = () => {
 
 export {
     registerUser,
+    verifyEmailOtp,
+    resendEmailOtp,
     loginUser,
     logoutUser
 };

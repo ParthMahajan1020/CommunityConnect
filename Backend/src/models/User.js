@@ -35,11 +35,45 @@ const userSchema = new mongoose.Schema(
         profileImage: {
             type: String,
             default: ''
-        }
+        },
+
+        // Email verification
+        emailVerified: {
+            type: Boolean,
+            default: false
+        },
+
+        // Hashed OTP, never store the actual OTP
+        emailOtpHash: {
+            type: String,
+            default: undefined,
+            select: false
+        },
+
+        // OTP expiration time
+        emailOtpExpiresAt: {
+            type: Date,
+            default: undefined,
+            select: false
+        },
+
+        // Prevent excessive OTP resend requests
+        emailOtpLastSentAt: {
+            type: Date,
+            default: undefined,
+            select: false
+        },
+
+        emailOtpAttempts: {
+            type: Number,
+            default: 0,
+            select: false
+        },
     },
     {
         timestamps: true
     }
 );
+
 
 module.exports = mongoose.model('User', userSchema);
