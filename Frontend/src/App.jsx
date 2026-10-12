@@ -52,7 +52,14 @@ function RootRoute() {
     };
   }, []);
 
-  return verified ? <Navigate to="/home" replace /> : <Home />;
+  return verified ? (
+    <Navigate to="/home" replace />
+  ) : (
+    <>
+      <Navbar />
+      <Home />
+    </>
+  );
 }
 
 function NotFound() {
@@ -90,7 +97,7 @@ function ProtectedLayout() {
     <>
       <Navbar />
 
-      <main className="relative z-10 pt-28">
+      <main className="relative z-10">
         <Outlet />
       </main>
     </>
