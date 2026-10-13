@@ -87,8 +87,7 @@ const registerUser = async (req, res) => {
             email: cleanedEmail,
             phone: cleanedPhone,
             location: cleanedLocation,
-            password: hashedPassword,
-            emailVerified: true
+            password: hashedPassword
         });
 
         return res.status(201).json({
