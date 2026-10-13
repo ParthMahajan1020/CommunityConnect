@@ -95,19 +95,6 @@ export default function Login() {
     } catch (err) {
       const responseData = err.response?.data;
 
-      if (responseData?.requiresEmailVerification) {
-        navigate("/verify-email", {
-          replace: true,
-          state: {
-            email: responseData.email || email,
-            message:
-              responseData.message ||
-              "Please verify your email address before logging in.",
-          },
-        });
-        return;
-      }
-
       setError(
         responseData?.message ||
           responseData?.error ||

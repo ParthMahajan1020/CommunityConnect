@@ -25,7 +25,6 @@ import BloodDonor from "./pages/BloodDonor";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import VerifyEmail from "./pages/VerifyEmail";
 
 import ProtectedRoute from "./components/ProtectedRoute";
 import { getProfile, logoutUser } from "./services/api";
@@ -148,8 +147,6 @@ function App() {
         <Route path="/login" element={<Login />} />
 
         <Route path="/register" element={<Register />} />
-
-        <Route path="/verify-email" element={<VerifyEmail />} />
 
         {/* Public feedback form; submission retains its existing auth requirement. */}
         <Route path="/feedback" element={<FeedbackLayout />} />

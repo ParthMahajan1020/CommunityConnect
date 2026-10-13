@@ -239,10 +239,13 @@ export default function Register() {
         password,
       });
 
-      navigate("/verify-email", {
+      navigate("/login", {
         replace: true,
         state: {
           email: response.email || email,
+          message:
+            response.message ||
+            "Account created successfully. Please log in.",
         },
       });
     } catch (err) {
