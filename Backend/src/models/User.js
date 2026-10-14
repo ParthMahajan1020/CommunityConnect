@@ -37,11 +37,34 @@ const userSchema = new mongoose.Schema(
             default: ''
         },
 
+        emailVerified: {
+            type: Boolean,
+            default: false
+        },
+
+        emailOTP: {
+            type: String,
+            default: null
+        },
+
+        emailOTPExpires: {
+            type: Date,
+            default: null
+        },
+
+        emailOTPAttempts: {
+            type: Number,
+            default: 0
+        },
+
+        emailOTPResendAt: {
+            type: Date,
+            default: null
+        }
     },
     {
         timestamps: true
     }
 );
-
 
 module.exports = mongoose.model('User', userSchema);

@@ -12,6 +12,23 @@ const registerUser = async (userData) => {
     return response.data;
 };
 
+const verifyEmailOTP = async (email, otp) => {
+    const response = await API.post("/auth/verify-email-otp", {
+        email,
+        otp
+    });
+
+    return response.data;
+};
+
+const resendEmailOTP = async (email) => {
+    const response = await API.post("/auth/resend-email-otp", {
+        email
+    });
+
+    return response.data;
+};
+
 const loginUser = async (credentials) => {
     const response = await API.post("/auth/login", credentials);
 
@@ -214,6 +231,8 @@ const logoutUser = () => {
 
 export {
     registerUser,
+    verifyEmailOTP,
+    resendEmailOTP,
     loginUser,
     logoutUser,
 };
