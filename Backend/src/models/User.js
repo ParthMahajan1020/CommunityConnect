@@ -37,6 +37,10 @@ const userSchema = new mongoose.Schema(
             default: ''
         },
 
+        // ================================
+        // EMAIL VERIFICATION
+        // ================================
+
         emailVerified: {
             type: Boolean,
             default: false
@@ -58,6 +62,30 @@ const userSchema = new mongoose.Schema(
         },
 
         emailOTPResendAt: {
+            type: Date,
+            default: null
+        },
+
+        // ================================
+        // PASSWORD RESET
+        // ================================
+
+        passwordResetOTP: {
+            type: String,
+            default: null
+        },
+
+        passwordResetOTPExpires: {
+            type: Date,
+            default: null
+        },
+
+        passwordResetOTPAttempts: {
+            type: Number,
+            default: 0
+        },
+
+        passwordResetOTPResendAt: {
             type: Date,
             default: null
         }

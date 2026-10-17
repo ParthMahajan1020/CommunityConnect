@@ -3,6 +3,11 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { sendOTPEmail } = require('../services/emailService');
 
+
+// ============================================
+// VALIDATION
+// ============================================
+
 const validateEmail = (value) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 
@@ -10,13 +15,19 @@ const validatePhone = (value) =>
     /^\+?\d[\d\s()-]{6,19}$/.test(value);
 
 
-// Generate 6-digit OTP
+// ============================================
+// GENERATE 6-DIGIT OTP
+// ============================================
+
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
 
+// ============================================
 // REGISTER NEW USER
+// ============================================
+
 const registerUser = async (req, res) => {
     try {
         const {
@@ -28,7 +39,9 @@ const registerUser = async (req, res) => {
         } = req.body || {};
 
         const cleanedName =
-            typeof name === 'string' ? name.trim() : '';
+            typeof name === 'string'
+                ? name.trim()
+                : '';
 
         const cleanedEmail =
             typeof email === 'string'
@@ -36,13 +49,20 @@ const registerUser = async (req, res) => {
                 : '';
 
         const cleanedPhone =
-            typeof phone === 'string' ? phone.trim() : '';
+            typeof phone === 'string'
+                ? phone.trim()
+                : '';
 
         const cleanedLocation =
-            typeof location === 'string' ? location.trim() : '';
+            typeof location === 'string'
+                ? location.trim()
+                : '';
 
         const cleanedPassword =
-            typeof password === 'string' ? password : '';
+            typeof password === 'string'
+                ? password
+                : '';
+
 
         if (
             !cleanedName ||
@@ -56,11 +76,13 @@ const registerUser = async (req, res) => {
             });
         }
 
+
         if (!validateEmail(cleanedEmail)) {
             return res.status(400).json({
                 message: 'Please enter a valid email address.'
             });
         }
+
 
         if (!validatePhone(cleanedPhone)) {
             return res.status(400).json({
@@ -68,11 +90,13 @@ const registerUser = async (req, res) => {
             });
         }
 
+
         if (cleanedPassword.length < 8) {
             return res.status(400).json({
                 message: 'Password must be at least 8 characters long.'
             });
         }
+
 
         const existingUser = await User.findOne({
             $or: [
@@ -81,16 +105,19 @@ const registerUser = async (req, res) => {
             ]
         });
 
+
         if (existingUser) {
             return res.status(409).json({
                 message: 'This email or phone number is already registered.'
             });
         }
 
+
         const hashedPassword = await bcrypt.hash(
             cleanedPassword,
             12
         );
+
 
         const emailOTP = generateOTP();
 
@@ -98,10 +125,12 @@ const registerUser = async (req, res) => {
             Date.now() + 10 * 60 * 1000
         );
 
+
         const hashedOTP = await bcrypt.hash(
             emailOTP,
             10
         );
+
 
         const user = await User.create({
             name: cleanedName,
@@ -122,12 +151,18 @@ const registerUser = async (req, res) => {
             )
         });
 
+
         try {
             await sendOTPEmail(
                 user.email,
                 emailOTP
             );
         } catch (emailError) {
+            console.error(
+                'Registration email error:',
+                emailError.message
+            );
+
             await User.findByIdAndDelete(user._id);
 
             return res.status(500).json({
@@ -135,6 +170,7 @@ const registerUser = async (req, res) => {
                     'Account could not be created because the verification email could not be sent. Please try again.'
             });
         }
+
 
         return res.status(201).json({
             success: true,
@@ -144,11 +180,14 @@ const registerUser = async (req, res) => {
                 'Account created successfully. Please check your email for the verification OTP.'
         });
 
+
     } catch (error) {
+
         console.error(
             'Registration error:',
             error.message
         );
+
 
         if (error.code === 11000) {
             return res.status(409).json({
@@ -156,6 +195,7 @@ const registerUser = async (req, res) => {
                     'This email or phone number is already registered.'
             });
         }
+
 
         return res.status(500).json({
             message:
@@ -165,23 +205,30 @@ const registerUser = async (req, res) => {
 };
 
 
+// ============================================
 // VERIFY EMAIL OTP
+// ============================================
+
 const verifyEmailOTP = async (req, res) => {
     try {
+
         const {
             email,
             otp
         } = req.body || {};
+
 
         const cleanedEmail =
             typeof email === 'string'
                 ? email.trim().toLowerCase()
                 : '';
 
+
         const cleanedOTP =
             typeof otp === 'string'
                 ? otp.trim()
                 : '';
+
 
         if (!cleanedEmail || !cleanedOTP) {
             return res.status(400).json({
@@ -190,6 +237,7 @@ const verifyEmailOTP = async (req, res) => {
             });
         }
 
+
         if (!/^\d{6}$/.test(cleanedOTP)) {
             return res.status(400).json({
                 message:
@@ -197,15 +245,18 @@ const verifyEmailOTP = async (req, res) => {
             });
         }
 
+
         const user = await User.findOne({
             email: cleanedEmail
         });
+
 
         if (!user) {
             return res.status(404).json({
                 message: 'User not found.'
             });
         }
+
 
         if (user.emailVerified) {
             return res.status(400).json({
@@ -214,14 +265,20 @@ const verifyEmailOTP = async (req, res) => {
             });
         }
 
-        if (!user.emailOTP || !user.emailOTPExpires) {
+
+        if (
+            !user.emailOTP ||
+            !user.emailOTPExpires
+        ) {
             return res.status(400).json({
                 message:
                     'No active OTP found. Please request a new OTP.'
             });
         }
 
+
         if (new Date() > user.emailOTPExpires) {
+
             user.emailOTP = null;
             user.emailOTPExpires = null;
             user.emailOTPAttempts = 0;
@@ -234,6 +291,7 @@ const verifyEmailOTP = async (req, res) => {
             });
         }
 
+
         if (user.emailOTPAttempts >= 5) {
             return res.status(429).json({
                 message:
@@ -241,21 +299,27 @@ const verifyEmailOTP = async (req, res) => {
             });
         }
 
-        const isOTPValid = await bcrypt.compare(
-            cleanedOTP,
-            user.emailOTP
-        );
+
+        const isOTPValid =
+            await bcrypt.compare(
+                cleanedOTP,
+                user.emailOTP
+            );
+
 
         if (!isOTPValid) {
+
             user.emailOTPAttempts += 1;
 
             await user.save();
+
 
             const remainingAttempts =
                 Math.max(
                     0,
                     5 - user.emailOTPAttempts
                 );
+
 
             return res.status(400).json({
                 message:
@@ -265,13 +329,16 @@ const verifyEmailOTP = async (req, res) => {
             });
         }
 
+
         user.emailVerified = true;
         user.emailOTP = null;
         user.emailOTPExpires = null;
         user.emailOTPAttempts = 0;
         user.emailOTPResendAt = null;
 
+
         await user.save();
+
 
         return res.status(200).json({
             success: true,
@@ -279,11 +346,14 @@ const verifyEmailOTP = async (req, res) => {
                 'Email verified successfully.'
         });
 
+
     } catch (error) {
+
         console.error(
             'Email verification error:',
             error.message
         );
+
 
         return res.status(500).json({
             message:
@@ -293,17 +363,23 @@ const verifyEmailOTP = async (req, res) => {
 };
 
 
+// ============================================
 // RESEND EMAIL OTP
+// ============================================
+
 const resendEmailOTP = async (req, res) => {
     try {
+
         const {
             email
         } = req.body || {};
+
 
         const cleanedEmail =
             typeof email === 'string'
                 ? email.trim().toLowerCase()
                 : '';
+
 
         if (!cleanedEmail) {
             return res.status(400).json({
@@ -312,9 +388,11 @@ const resendEmailOTP = async (req, res) => {
             });
         }
 
+
         const user = await User.findOne({
             email: cleanedEmail
         });
+
 
         if (!user) {
             return res.status(404).json({
@@ -323,6 +401,7 @@ const resendEmailOTP = async (req, res) => {
             });
         }
 
+
         if (user.emailVerified) {
             return res.status(400).json({
                 message:
@@ -330,14 +409,20 @@ const resendEmailOTP = async (req, res) => {
             });
         }
 
+
         if (
             user.emailOTPResendAt &&
             new Date() < user.emailOTPResendAt
         ) {
-            const remainingSeconds = Math.ceil(
-                (user.emailOTPResendAt.getTime() -
-                    Date.now()) / 1000
-            );
+
+            const remainingSeconds =
+                Math.ceil(
+                    (
+                        user.emailOTPResendAt.getTime() -
+                        Date.now()
+                    ) / 1000
+                );
+
 
             return res.status(429).json({
                 message:
@@ -345,38 +430,55 @@ const resendEmailOTP = async (req, res) => {
             });
         }
 
+
         const emailOTP = generateOTP();
 
-        const hashedOTP = await bcrypt.hash(
-            emailOTP,
-            10
-        );
+
+        const hashedOTP =
+            await bcrypt.hash(
+                emailOTP,
+                10
+            );
+
 
         user.emailOTP = hashedOTP;
 
-        user.emailOTPExpires = new Date(
-            Date.now() + 10 * 60 * 1000
-        );
+        user.emailOTPExpires =
+            new Date(
+                Date.now() + 10 * 60 * 1000
+            );
 
         user.emailOTPAttempts = 0;
 
-        user.emailOTPResendAt = new Date(
-            Date.now() + 30 * 1000
-        );
+        user.emailOTPResendAt =
+            new Date(
+                Date.now() + 30 * 1000
+            );
+
 
         await user.save();
 
+
         try {
+
             await sendOTPEmail(
                 user.email,
                 emailOTP
             );
+
         } catch (emailError) {
+
+            console.error(
+                'Resend email error:',
+                emailError.message
+            );
+
             return res.status(500).json({
                 message:
                     'Failed to send verification email. Please try again.'
             });
         }
+
 
         return res.status(200).json({
             success: true,
@@ -386,11 +488,14 @@ const resendEmailOTP = async (req, res) => {
             resendAfter: 30
         });
 
+
     } catch (error) {
+
         console.error(
             'Resend OTP error:',
             error.message
         );
+
 
         return res.status(500).json({
             message:
@@ -400,29 +505,396 @@ const resendEmailOTP = async (req, res) => {
 };
 
 
+// ============================================
+// FORGOT PASSWORD - SEND OTP
+// ============================================
+
+const forgotPassword = async (req, res) => {
+    try {
+
+        const {
+            email
+        } = req.body || {};
+
+
+        const cleanedEmail =
+            typeof email === 'string'
+                ? email.trim().toLowerCase()
+                : '';
+
+
+        if (!cleanedEmail) {
+            return res.status(400).json({
+                message:
+                    'Email is required.'
+            });
+        }
+
+
+        if (!validateEmail(cleanedEmail)) {
+            return res.status(400).json({
+                message:
+                    'Please enter a valid email address.'
+            });
+        }
+
+
+        const user = await User.findOne({
+            email: cleanedEmail
+        });
+
+
+        // User specifically wants an explicit message
+        // when the email is not registered.
+        if (!user) {
+            return res.status(404).json({
+                message:
+                    'This email is not registered.'
+            });
+        }
+
+
+        // Prevent requesting another OTP too quickly.
+        if (
+            user.passwordResetOTPResendAt &&
+            new Date() < user.passwordResetOTPResendAt
+        ) {
+
+            const remainingSeconds =
+                Math.ceil(
+                    (
+                        user.passwordResetOTPResendAt.getTime() -
+                        Date.now()
+                    ) / 1000
+                );
+
+
+            return res.status(429).json({
+                message:
+                    `Please wait ${remainingSeconds} seconds before requesting another OTP.`
+            });
+        }
+
+
+        const resetOTP = generateOTP();
+
+
+        const hashedResetOTP =
+            await bcrypt.hash(
+                resetOTP,
+                10
+            );
+
+
+        user.passwordResetOTP =
+            hashedResetOTP;
+
+
+        user.passwordResetOTPExpires =
+            new Date(
+                Date.now() + 10 * 60 * 1000
+            );
+
+
+        user.passwordResetOTPAttempts = 0;
+
+
+        user.passwordResetOTPResendAt =
+            new Date(
+                Date.now() + 30 * 1000
+            );
+
+
+        await user.save();
+
+
+        try {
+
+            await sendOTPEmail(
+                user.email,
+                resetOTP
+            );
+
+        } catch (emailError) {
+
+            console.error(
+                'Password reset email error:',
+                emailError.message
+            );
+
+
+            // Remove the reset OTP if email delivery fails.
+            user.passwordResetOTP = null;
+            user.passwordResetOTPExpires = null;
+            user.passwordResetOTPAttempts = 0;
+            user.passwordResetOTPResendAt = null;
+
+            await user.save();
+
+
+            return res.status(500).json({
+                message:
+                    'Unable to send password reset OTP. Please try again.'
+            });
+        }
+
+
+        return res.status(200).json({
+            success: true,
+            email: user.email,
+            message:
+                'Password reset OTP has been sent to your registered email.',
+            expiresIn: 600,
+            resendAfter: 30
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            'Forgot password error:',
+            error.message
+        );
+
+
+        return res.status(500).json({
+            message:
+                'Unable to process password reset. Please try again.'
+        });
+    }
+};
+
+
+// ============================================
+// RESET PASSWORD
+// ============================================
+
+const resetPassword = async (req, res) => {
+    try {
+
+        const {
+            email,
+            otp,
+            newPassword
+        } = req.body || {};
+
+
+        const cleanedEmail =
+            typeof email === 'string'
+                ? email.trim().toLowerCase()
+                : '';
+
+
+        const cleanedOTP =
+            typeof otp === 'string'
+                ? otp.trim()
+                : '';
+
+
+        const cleanedPassword =
+            typeof newPassword === 'string'
+                ? newPassword
+                : '';
+
+
+        if (
+            !cleanedEmail ||
+            !cleanedOTP ||
+            !cleanedPassword
+        ) {
+            return res.status(400).json({
+                message:
+                    'Email, OTP, and new password are required.'
+            });
+        }
+
+
+        if (!validateEmail(cleanedEmail)) {
+            return res.status(400).json({
+                message:
+                    'Please enter a valid email address.'
+            });
+        }
+
+
+        if (!/^\d{6}$/.test(cleanedOTP)) {
+            return res.status(400).json({
+                message:
+                    'OTP must contain exactly 6 digits.'
+            });
+        }
+
+
+        if (cleanedPassword.length < 8) {
+            return res.status(400).json({
+                message:
+                    'New password must be at least 8 characters long.'
+            });
+        }
+
+
+        const user = await User.findOne({
+            email: cleanedEmail
+        });
+
+
+        if (!user) {
+            return res.status(404).json({
+                message:
+                    'This email is not registered.'
+            });
+        }
+
+
+        if (
+            !user.passwordResetOTP ||
+            !user.passwordResetOTPExpires
+        ) {
+            return res.status(400).json({
+                message:
+                    'No active password reset OTP found. Please request a new OTP.'
+            });
+        }
+
+
+        if (
+            new Date() >
+            user.passwordResetOTPExpires
+        ) {
+
+            user.passwordResetOTP = null;
+            user.passwordResetOTPExpires = null;
+            user.passwordResetOTPAttempts = 0;
+            user.passwordResetOTPResendAt = null;
+
+            await user.save();
+
+
+            return res.status(400).json({
+                message:
+                    'Password reset OTP has expired. Please request a new OTP.'
+            });
+        }
+
+
+        if (
+            user.passwordResetOTPAttempts >= 5
+        ) {
+            return res.status(429).json({
+                message:
+                    'Too many incorrect attempts. Please request a new OTP.'
+            });
+        }
+
+
+        const isOTPValid =
+            await bcrypt.compare(
+                cleanedOTP,
+                user.passwordResetOTP
+            );
+
+
+        if (!isOTPValid) {
+
+            user.passwordResetOTPAttempts += 1;
+
+            await user.save();
+
+
+            const remainingAttempts =
+                Math.max(
+                    0,
+                    5 - user.passwordResetOTPAttempts
+                );
+
+
+            return res.status(400).json({
+                message:
+                    remainingAttempts > 0
+                        ? `Invalid OTP. ${remainingAttempts} attempt${remainingAttempts === 1 ? '' : 's'} remaining.`
+                        : 'Invalid OTP. Please request a new OTP.'
+            });
+        }
+
+
+        // Hash the new password.
+        const hashedPassword =
+            await bcrypt.hash(
+                cleanedPassword,
+                12
+            );
+
+
+        user.password = hashedPassword;
+
+
+        // Clear reset OTP after successful reset.
+        user.passwordResetOTP = null;
+        user.passwordResetOTPExpires = null;
+        user.passwordResetOTPAttempts = 0;
+        user.passwordResetOTPResendAt = null;
+
+
+        await user.save();
+
+
+        return res.status(200).json({
+            success: true,
+            message:
+                'Password reset successfully. You can now log in with your new password.'
+        });
+
+
+    } catch (error) {
+
+        console.error(
+            'Reset password error:',
+            error.message
+        );
+
+
+        return res.status(500).json({
+            message:
+                'Unable to reset password. Please try again.'
+        });
+    }
+};
+
+
+// ============================================
 // LOGIN
+// ============================================
+
 const loginUser = async (req, res) => {
     try {
+
         const {
             email,
             password
         } = req.body || {};
+
 
         const normalizedEmail =
             typeof email === 'string'
                 ? email.trim().toLowerCase()
                 : '';
 
-        if (!normalizedEmail || !password) {
+
+        if (
+            !normalizedEmail ||
+            !password
+        ) {
             return res.status(400).json({
                 message:
                     'Email and password are required.'
             });
         }
 
+
         const user = await User.findOne({
             email: normalizedEmail
         });
+
 
         if (!user) {
             return res.status(401).json({
@@ -431,11 +903,13 @@ const loginUser = async (req, res) => {
             });
         }
 
+
         const isPasswordCorrect =
             await bcrypt.compare(
                 password,
                 user.password
             );
+
 
         if (!isPasswordCorrect) {
             return res.status(401).json({
@@ -443,6 +917,7 @@ const loginUser = async (req, res) => {
                     'Invalid email or password.'
             });
         }
+
 
         if (!user.emailVerified) {
             return res.status(403).json({
@@ -453,6 +928,7 @@ const loginUser = async (req, res) => {
             });
         }
 
+
         const token = jwt.sign(
             {
                 userId: user._id
@@ -462,6 +938,7 @@ const loginUser = async (req, res) => {
                 expiresIn: '7d'
             }
         );
+
 
         return res.status(200).json({
             message:
@@ -478,11 +955,14 @@ const loginUser = async (req, res) => {
             }
         });
 
+
     } catch (error) {
+
         console.error(
             'Login error:',
             error.message
         );
+
 
         return res.status(500).json({
             message:
@@ -492,9 +972,15 @@ const loginUser = async (req, res) => {
 };
 
 
+// ============================================
+// EXPORTS
+// ============================================
+
 module.exports = {
     registerUser,
     loginUser,
     verifyEmailOTP,
-    resendEmailOTP
+    resendEmailOTP,
+    forgotPassword,
+    resetPassword
 };

@@ -229,6 +229,28 @@ const logoutUser = () => {
     localStorage.removeItem("user");
 };
 
+export const forgotPassword = async ({ email }) => {
+    const response = await API.post("/auth/forgot-password", {
+        email
+    });
+
+    return response.data;
+};
+
+export const resetPassword = async ({
+    email,
+    otp,
+    newPassword
+}) => {
+    const response = await API.post("/auth/reset-password", {
+        email,
+        otp,
+        newPassword
+    });
+
+    return response.data;
+};
+
 export {
     registerUser,
     verifyEmailOTP,
