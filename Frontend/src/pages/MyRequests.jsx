@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { motion } from "motion/react";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -7,17 +8,15 @@ import {
   Clock3,
   HeartHandshake,
   MapPin,
-  MessageCircle,
   RefreshCw,
-  ShieldCheck,
   X,
   XCircle,
   Inbox,
   Send,
-  CalendarDays,
   LoaderCircle,
   AlertCircle,
-  ClipboardList,
+  Wrench,
+  Phone,
 } from "lucide-react";
 
 import {
@@ -25,31 +24,33 @@ import {
   getSentRequests,
   updateConnectionRequestStatus,
 } from "../services/api";
+import { RequestTimeline } from "../components/visuals/StatusTimeline";
+import { EmptyStateVisual } from "../components/visuals/EmptyStateVisual";
 
 const STATUS_STYLES = {
   PENDING: {
     label: "Pending",
-    className: "bg-amber-50 text-amber-700 ring-amber-200",
+    className: "bg-amber-50 text-amber-700 border-amber-200",
     icon: Clock3,
   },
   ACCEPTED: {
     label: "Accepted",
-    className: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    className: "bg-emerald-50 text-emerald-700 border-emerald-200",
     icon: CheckCircle2,
   },
   REJECTED: {
     label: "Declined",
-    className: "bg-rose-50 text-rose-700 ring-rose-200",
+    className: "bg-rose-50 text-rose-700 border-rose-200",
     icon: XCircle,
   },
   COMPLETED: {
     label: "Completed",
-    className: "bg-blue-50 text-blue-700 ring-blue-200",
+    className: "bg-blue-50 text-blue-700 border-blue-200",
     icon: CheckCircle2,
   },
   INCOMPLETED: {
-    label: "Not completed",
-    className: "bg-slate-100 text-slate-600 ring-slate-200",
+    label: "Incomplete",
+    className: "bg-slate-50 text-slate-600 border-slate-200",
     icon: AlertCircle,
   },
 };
@@ -65,18 +66,12 @@ const getRequestId = (request) =>
   request?._id || request?.id || request?.requestId;
 
 const formatDate = (date) => {
-  if (!date) return "Date unavailable";
-
-  const parsedDate = new Date(date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Date unavailable";
-  }
-
-  return parsedDate.toLocaleDateString("en-IN", {
+  if (!date) return "";
+  const parsed = new Date(date);
+  if (Number.isNaN(parsed.getTime())) return "";
+  return parsed.toLocaleDateString("en-IN", {
     day: "numeric",
     month: "short",
-    year: "numeric",
   });
 };
 
@@ -87,33 +82,23 @@ const getRequestType = (request) => {
 
   if (type.includes("BLOOD")) {
     return {
-      label: "Blood donation",
-      className: "bg-rose-50 text-rose-700",
-      dotClassName: "bg-rose-500",
+      label: "Blood",
+      className: "bg-[#FBEAEC] text-[#C94C55]",
+      icon: HeartHandshake,
     };
   }
 
   return {
-    label: "Local service",
-    className: "bg-blue-50 text-blue-700",
-    dotClassName: "bg-blue-500",
+    label: "Service",
+    className: "bg-[#EAF1FA] text-[#4B78A8]",
+    icon: Wrench,
   };
 };
 
 const getPersonName = (person) => {
-  if (!person) return "Community member";
-
-  if (typeof person === "string") {
-    return person;
-  }
-
-  return (
-    person.name ||
-    person.fullName ||
-    person.username ||
-    person.email ||
-    "Community member"
-  );
+  if (!person) return "Member";
+  if (typeof person === "string") return person;
+  return person.name || person.fullName || person.username || person.email || "Member";
 };
 
 const getRequestPerson = (request, received) => {
@@ -123,11 +108,9 @@ const getRequestPerson = (request, received) => {
       request?.sender ||
       request?.fromUser ||
       request?.user ||
-      request?.acceptor ||
       request?.requesterId
     );
   }
-
   return (
     request?.provider ||
     request?.recipient ||
@@ -137,313 +120,8 @@ const getRequestPerson = (request, received) => {
   );
 };
 
-const getRequestLocation = (request) => {
-  const person = getRequestPerson(request, false);
-
-  return (
-    request?.location ||
-    request?.requestLocation ||
-    request?.provider?.location ||
-    request?.requester?.location ||
-    person?.location ||
-    ""
-  );
-};
-
-const getRequestDescription = (request) =>
-  request?.description ||
-  request?.message ||
-  request?.details ||
-  request?.reason ||
-  "";
-
-const getRequestsFromResponse = (response) => {
-  if (!Array.isArray(response?.requests)) {
-    throw new Error("The server returned an invalid requests response.");
-  }
-
-  return response.requests;
-};
-
-function StatusBadge({ status }) {
-  const config = getStatusConfig(status);
-  const Icon = config.icon;
-
-  return (
-    <span
-      className={`inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold ring-1 ring-inset ${config.className}`}
-    >
-      <Icon size={13} strokeWidth={2.2} />
-      {config.label}
-    </span>
-  );
-}
-
-function TypeBadge({ request }) {
-  const type = getRequestType(request);
-
-  return (
-    <span
-      className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${type.className}`}
-    >
-      <span className={`h-1.5 w-1.5 rounded-full ${type.dotClassName}`} />
-      {type.label}
-    </span>
-  );
-}
-
-function EmptyState({ received }) {
-  const Icon = received ? Inbox : Send;
-
-  return (
-    <div className="flex flex-col items-center justify-center px-5 py-12 text-center sm:py-16">
-      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#E2E9E4] bg-[#F4F7F5]">
-        <Icon size={27} strokeWidth={1.5} className="text-[#427A65]" />
-      </div>
-
-      <h3 className="text-lg font-semibold tracking-tight text-[#24342E]">
-        {received ? "No incoming requests yet" : "No requests sent yet"}
-      </h3>
-
-      <p className="mt-2 max-w-sm text-sm leading-6 text-[#718078]">
-        {received
-          ? "When someone reaches out to you through CommunityConnect, their request will appear here."
-          : "When you request help from a donor or service provider, you can track its progress here."}
-      </p>
-    </div>
-  );
-}
-
-function RequestCard({
-  request,
-  received,
-  onUpdateStatus,
-  updatingId,
-}) {
-  const status = String(request?.status || "PENDING").toUpperCase();
-  const requestId = getRequestId(request);
-  const type = getRequestType(request);
-  const person = getRequestPerson(request, received);
-  const personName = getPersonName(person);
-
-  const phone =
-    request?.contact ||
-    request?.phone ||
-    request?.phoneNumber ||
-    person?.phone ||
-    person?.contact ||
-    "";
-
-  const location = getRequestLocation(request);
-  const description = getRequestDescription(request);
-  const createdAt = request?.createdAt || request?.date || request?.updatedAt;
-
-  const isUpdating = updatingId === requestId;
-
-  const canRespond = received && status === "PENDING";
-  const canComplete = !received && status === "ACCEPTED";
-
-  return (
-    <article className="group rounded-2xl border border-[#E2E9E4] bg-white p-4 transition duration-200 hover:border-[#C9D9CE] hover:shadow-[0_8px_30px_rgba(36,52,46,0.045)] sm:p-5">
-      {/* Card header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
-          <div
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl ${
-              type.label === "Blood donation"
-                ? "bg-[#FBEAEC] text-[#C94C55]"
-                : "bg-[#EAF1FA] text-[#6C8FBC]"
-            }`}
-          >
-            {type.label === "Blood donation" ? (
-              <HeartHandshake size={22} strokeWidth={1.8} />
-            ) : (
-              <MessageCircle size={22} strokeWidth={1.8} />
-            )}
-          </div>
-
-          <div className="min-w-0">
-            <h3 className="truncate text-base font-semibold text-[#24342E]">
-              {personName}
-            </h3>
-
-            <p className="mt-1 text-xs text-[#87938C]">
-              {received ? "Request received" : "Request sent"}
-            </p>
-          </div>
-        </div>
-
-        <StatusBadge status={status} />
-      </div>
-
-      {/* Request details */}
-      <div className="mt-5 flex flex-wrap items-center gap-2">
-        <TypeBadge request={request} />
-
-        {location && (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F5F7F5] px-3 py-1.5 text-xs font-medium text-[#64736B]">
-            <MapPin size={13} />
-            <span className="max-w-[180px] truncate">{location}</span>
-          </span>
-        )}
-      </div>
-
-      {description && (
-        <div className="mt-4 rounded-xl bg-[#F8FAF9] p-3.5">
-          <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[#87938C]">
-            Request details
-          </p>
-
-          <p className="mt-2 whitespace-pre-wrap break-words text-sm leading-6 text-[#526159]">
-            {description}
-          </p>
-        </div>
-      )}
-
-      {/* Footer information */}
-      <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[#EEF2EF] pt-4 text-xs text-[#7B8880]">
-        <span className="inline-flex items-center gap-1.5">
-          <CalendarDays size={14} />
-          {formatDate(createdAt)}
-        </span>
-
-        {phone && status === "ACCEPTED" && (
-          <a
-            href={`tel:${String(phone).replace(/[^\d+]/g, "")}`}
-            className="inline-flex items-center gap-1.5 font-medium text-[#427A65] transition hover:text-[#315E4C]"
-          >
-            <MessageCircle size={14} />
-            Contact member
-          </a>
-        )}
-      </div>
-
-      {/* Received request actions */}
-      {canRespond && (
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            disabled={isUpdating}
-            onClick={() => onUpdateStatus(request, "ACCEPTED")}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#427A65] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#356650] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isUpdating ? (
-              <LoaderCircle size={16} className="animate-spin" />
-            ) : (
-              <Check size={16} />
-            )}
-            Accept
-          </button>
-
-          <button
-            type="button"
-            disabled={isUpdating}
-            onClick={() => onUpdateStatus(request, "REJECTED")}
-            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#E7D8D9] bg-white px-4 py-2.5 text-sm font-semibold text-[#B64C55] transition hover:bg-[#FFF5F5] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isUpdating ? (
-              <LoaderCircle size={16} className="animate-spin" />
-            ) : (
-              <X size={16} />
-            )}
-            Decline
-          </button>
-        </div>
-      )}
-
-      {/* Sent request completion actions */}
-      {canComplete && (
-        <div className="mt-5">
-          <p className="mb-3 text-xs leading-5 text-[#718078]">
-            Has your request been fulfilled? Update its status to keep your
-            request history accurate.
-          </p>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={() => onUpdateStatus(request, "COMPLETED")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#427A65] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#356650] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isUpdating ? (
-                <LoaderCircle size={16} className="animate-spin" />
-              ) : (
-                <CheckCircle2 size={16} />
-              )}
-              Mark completed
-            </button>
-
-            <button
-              type="button"
-              disabled={isUpdating}
-              onClick={() => onUpdateStatus(request, "INCOMPLETED")}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-[#E2E9E4] bg-white px-4 py-2.5 text-sm font-semibold text-[#64736B] transition hover:bg-[#F5F7F5] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isUpdating ? (
-                <LoaderCircle size={16} className="animate-spin" />
-              ) : (
-                <AlertCircle size={16} />
-              )}
-              Not completed
-            </button>
-          </div>
-        </div>
-      )}
-    </article>
-  );
-}
-
-function RequestSection({
-  title,
-  subtitle,
-  requests,
-  received,
-  icon: Icon,
-  onUpdateStatus,
-  updatingId,
-}) {
-  return (
-    <section className="overflow-hidden rounded-2xl border border-[#E2E9E4] bg-white">
-      <div className="flex items-center justify-between gap-4 border-b border-[#EAF0EC] px-4 py-4 sm:px-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
-            <Icon size={19} strokeWidth={1.8} />
-          </div>
-
-          <div>
-            <h2 className="text-base font-semibold text-[#24342E]">
-              {title}
-            </h2>
-            <p className="mt-0.5 text-xs text-[#87938C]">{subtitle}</p>
-          </div>
-        </div>
-
-        <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-[#F1F5F2] px-2.5 text-xs font-semibold text-[#526159]">
-          {requests.length}
-        </span>
-      </div>
-
-      {requests.length === 0 ? (
-        <EmptyState received={received} />
-      ) : (
-        <div className="space-y-4 p-3 sm:p-5">
-          {requests.map((request, index) => (
-            <RequestCard
-              key={getRequestId(request) || `${received ? "received" : "sent"}-${index}`}
-              request={request}
-              received={received}
-              onUpdateStatus={onUpdateStatus}
-              updatingId={updatingId}
-            />
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
 export default function MyRequests() {
+  const [activeTab, setActiveTab] = useState("received"); // "received" | "sent"
   const [sentRequests, setSentRequests] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
 
@@ -452,41 +130,8 @@ export default function MyRequests() {
   const [error, setError] = useState("");
   const [updatingId, setUpdatingId] = useState(null);
 
-  const loadRequests = useCallback(async (showLoader = true) => {
-  setError("");
-
-  if (showLoader) {
-    setLoading(true);
-  } else {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-  }
-
-  try {
-    const [sentResponse, receivedResponse] = await Promise.all([
-      getSentRequests(),
-      getReceivedRequests(),
-    ]);
-
-    setSentRequests(getRequestsFromResponse(sentResponse));
-    setReceivedRequests(getRequestsFromResponse(receivedResponse));
-  } catch (err) {
-    console.error("Failed to load requests:", err);
-
-    setError(
-      err?.response?.data?.message ||
-        "We couldn't load your requests. Please try again."
-    );
-  } finally {
-    setLoading(false);
-    setRefreshing(false);
-  }
-}, []);
-
-  useEffect(() => {
-  let cancelled = false;
-
-  const fetchRequests = async () => {
-    setLoading(true);
     setError("");
 
     try {
@@ -495,134 +140,101 @@ export default function MyRequests() {
         getReceivedRequests(),
       ]);
 
-      if (cancelled) return;
-
-      setSentRequests(getRequestsFromResponse(sentResponse));
-      setReceivedRequests(getRequestsFromResponse(receivedResponse));
+      setSentRequests(sentResponse.requests || []);
+      setReceivedRequests(receivedResponse.requests || []);
     } catch (err) {
-      if (cancelled) return;
-
-      console.error("Failed to load requests:", err);
-
       setError(
-        err?.response?.data?.message ||
-          "We couldn't load your requests. Please try again."
+        err?.response?.data?.message || "Failed to load requests."
       );
     } finally {
-      if (!cancelled) {
-        setLoading(false);
-      }
+      setRefreshing(false);
     }
-  };
+  }, []);
 
-  fetchRequests();
+  useEffect(() => {
+    let active = true;
 
-  return () => {
-    cancelled = true;
-  };
-}, []);
+    Promise.all([getSentRequests(), getReceivedRequests()])
+      .then(([sentResponse, receivedResponse]) => {
+        if (!active) return;
+        setSentRequests(sentResponse.requests || []);
+        setReceivedRequests(receivedResponse.requests || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(
+          err?.response?.data?.message || "Failed to load requests."
+        );
+        setLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleUpdateStatus = async (request, status) => {
     const requestId = getRequestId(request);
-
-    if (!requestId) {
-      setError(
-        "This request is missing its ID. Refresh the page and try again."
-      );
-      return;
-    }
+    if (!requestId) return;
 
     setUpdatingId(requestId);
     setError("");
 
     try {
       await updateConnectionRequestStatus(requestId, status);
-
-      await loadRequests(false);
+      await handleRefresh();
     } catch (err) {
-      console.error("Failed to update request:", err);
-
       setError(
-        err?.response?.data?.message ||
-          "We couldn't update this request. Please try again."
+        err?.response?.data?.message || "Status update failed."
       );
     } finally {
       setUpdatingId(null);
     }
   };
 
-  const pendingReceived = receivedRequests.filter(
-    (request) =>
-      String(request?.status || "PENDING").toUpperCase() === "PENDING"
+  const pendingCount = receivedRequests.filter(
+    (r) => String(r?.status || "PENDING").toUpperCase() === "PENDING"
   ).length;
 
+  const currentList = activeTab === "received" ? receivedRequests : sentRequests;
+  const isReceived = activeTab === "received";
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#F8FAF9] px-4 pb-16 pt-10 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
-          <div className="animate-pulse">
-            <div className="h-3 w-28 rounded bg-[#E2E9E4]" />
-            <div className="mt-4 h-9 w-64 max-w-full rounded-lg bg-[#E2E9E4]" />
-            <div className="mt-3 h-4 w-80 max-w-full rounded bg-[#E8EEEA]" />
-
-            <div className="mt-10 grid gap-6 lg:grid-cols-2">
-              {[0, 1].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-2xl border border-[#E2E9E4] bg-white p-5"
-                >
-                  <div className="h-10 w-40 rounded-lg bg-[#E8EEEA]" />
-                  <div className="mt-6 space-y-4">
-                    <div className="h-36 rounded-xl bg-[#F1F5F2]" />
-                    <div className="h-36 rounded-xl bg-[#F1F5F2]" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="mt-8 flex items-center justify-center gap-2 text-sm text-[#718078]">
-            <LoaderCircle size={17} className="animate-spin" />
-            Loading your requests...
-          </div>
+      <main className="flex min-h-[60vh] items-center justify-center bg-[#F8FAF9]">
+        <div className="flex flex-col items-center gap-3">
+          <LoaderCircle className="h-8 w-8 animate-spin text-[#427A65]" />
+          <span className="text-xs text-[#6F7D76]">Loading requests...</span>
         </div>
       </main>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#F8FAF9] px-4 pb-16 pt-8 sm:px-6 sm:pt-12 lg:px-8">
-      <div className="mx-auto max-w-6xl">
-        {/* Page heading */}
-        <header className="mb-8 flex flex-col justify-between gap-5 sm:mb-10 sm:flex-row sm:items-end">
+    <main className="min-h-screen bg-[#F8FAF9] px-4 py-6 sm:px-6 sm:py-10">
+      <div className="mx-auto max-w-5xl">
+        {/* Header Dashboard */}
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#DCE8DF] bg-white px-3 py-1.5 text-xs font-semibold text-[#427A65]">
-              <ClipboardList size={14} />
-              YOUR ACTIVITY
-            </div>
-
-            <h1 className="text-3xl font-semibold tracking-tight text-[#24342E] sm:text-4xl">
-              My requests<span className="text-[#427A65]">.</span>
+            <h1 className="text-3xl font-bold tracking-tight text-[#24342E]">
+              My Requests
             </h1>
-
-            <p className="mt-3 max-w-xl text-sm leading-6 text-[#718078] sm:text-base">
-              Keep track of the help you need and the people reaching out to
-              you through your community.
+            <p className="mt-1 text-xs text-[#6F7D76]">
+              Real-time peer connection dashboard
             </p>
           </div>
 
           <button
             type="button"
-            onClick={() => loadRequests(false)}
+            onClick={handleRefresh}
             disabled={refreshing}
-            className="inline-flex min-h-11 items-center justify-center gap-2 self-start rounded-xl border border-[#DDE6E0] bg-white px-4 py-2.5 text-sm font-semibold text-[#526159] shadow-sm transition hover:border-[#BFD1C5] hover:bg-[#F5F8F6] disabled:cursor-not-allowed disabled:opacity-60 sm:self-auto"
+            className="inline-flex h-10 items-center gap-2 self-start rounded-xl border border-[#E2E9E4] bg-white px-3.5 text-xs font-semibold text-[#24342E] shadow-2xs transition hover:bg-[#F8FAF9] disabled:opacity-60 sm:self-auto"
           >
             <RefreshCw
-              size={15}
-              className={refreshing ? "animate-spin" : ""}
+              className={`h-3.5 w-3.5 ${refreshing ? "animate-spin" : ""}`}
             />
-            Refresh
+            Sync
           </button>
         </header>
 
@@ -630,128 +242,278 @@ export default function MyRequests() {
         {error && (
           <div
             role="alert"
-            className="mb-6 flex items-start gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm text-rose-700"
+            className="mt-4 flex items-center justify-between rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-medium text-rose-700"
           >
-            <AlertCircle size={18} className="mt-0.5 shrink-0" />
-
-            <div className="min-w-0 flex-1">
-              <p className="font-semibold">Something went wrong</p>
-              <p className="mt-1 leading-5">{error}</p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setError("")}
-              aria-label="Dismiss error"
-              className="rounded-lg p-1 transition hover:bg-rose-100"
-            >
-              <X size={16} />
+            <span>{error}</span>
+            <button onClick={() => setError("")}>
+              <X className="h-4 w-4" />
             </button>
           </div>
         )}
 
-        {/* Summary cards */}
-        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
-          <div className="rounded-2xl border border-[#E2E9E4] bg-white p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-[#718078]">
-                Requests sent
-              </span>
-
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
-                <ArrowUpRight size={18} />
-              </div>
+        {/* Summary Stat Chips */}
+        <div className="mt-6 grid grid-cols-3 gap-3">
+          <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF1FA] text-[#4B78A8]">
+              <ArrowDownLeft className="h-4 w-4" />
             </div>
-
-            <p className="mt-3 text-3xl font-semibold tracking-tight text-[#24342E]">
-              {sentRequests.length}
-            </p>
-
-            <p className="mt-1 text-xs text-[#87938C]">
-              Help you've requested
-            </p>
+            <div>
+              <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
+                {receivedRequests.length}
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
+                Received
+              </p>
+            </div>
           </div>
 
-          <div className="rounded-2xl border border-[#E2E9E4] bg-white p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-[#718078]">
-                Requests received
-              </span>
-
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF1FA] text-[#6C8FBC]">
-                <ArrowDownLeft size={18} />
-              </div>
+          <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
+              <ArrowUpRight className="h-4 w-4" />
             </div>
+            <div>
+              <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
+                {sentRequests.length}
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
+                Sent
+              </p>
+            </div>
+          </div>
 
-            <p className="mt-3 text-3xl font-semibold tracking-tight text-[#24342E]">
+          <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+              <Clock3 className="h-4 w-4" />
+            </div>
+            <div>
+              <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
+                {pendingCount}
+              </p>
+              <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
+                Pending
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Segmented Control Tabs */}
+        <div className="mt-7 flex items-center gap-2 border-b border-[#E2E9E4] pb-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab("received")}
+            className={`relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+              activeTab === "received"
+                ? "bg-[#24342E] text-white shadow-xs"
+                : "text-[#6F7D76] hover:bg-white hover:text-[#24342E]"
+            }`}
+          >
+            <Inbox className="h-3.5 w-3.5" />
+            Received
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                activeTab === "received"
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-[#6F7D76]"
+              }`}
+            >
               {receivedRequests.length}
-            </p>
+            </span>
+          </button>
 
-            <p className="mt-1 text-xs text-[#87938C]">
-              People reaching out to you
-            </p>
-          </div>
+          <button
+            type="button"
+            onClick={() => setActiveTab("sent")}
+            className={`relative flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-all ${
+              activeTab === "sent"
+                ? "bg-[#24342E] text-white shadow-xs"
+                : "text-[#6F7D76] hover:bg-white hover:text-[#24342E]"
+            }`}
+          >
+            <Send className="h-3.5 w-3.5" />
+            Sent
+            <span
+              className={`rounded-full px-1.5 py-0.2 text-[10px] ${
+                activeTab === "sent"
+                  ? "bg-white/20 text-white"
+                  : "bg-gray-100 text-[#6F7D76]"
+              }`}
+            >
+              {sentRequests.length}
+            </span>
+          </button>
+        </div>
 
-          <div className="rounded-2xl border border-[#E2E9E4] bg-white p-4 sm:p-5">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-[#718078]">
-                Awaiting response
-              </span>
+        {/* Request Cards Feed */}
+        <div className="mt-6">
+          {currentList.length === 0 ? (
+            <EmptyStateVisual
+              type={isReceived ? "received" : "sent"}
+              title={
+                isReceived
+                  ? "No incoming requests yet"
+                  : "No sent requests yet"
+              }
+            />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {currentList.map((request, idx) => {
+                const status = String(request?.status || "PENDING").toUpperCase();
+                const statusConfig = getStatusConfig(status);
+                const StatusIcon = statusConfig.icon;
+                const typeInfo = getRequestType(request);
+                const TypeIcon = typeInfo.icon;
+                const person = getRequestPerson(request, isReceived);
+                const personName = getPersonName(person);
+                const requestId = getRequestId(request);
+                const isUpdating = updatingId === requestId;
 
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-                <Clock3 size={18} />
-              </div>
+                const phone =
+                  request?.contact ||
+                  request?.phone ||
+                  person?.phone ||
+                  person?.contact;
+
+                const canRespond = isReceived && status === "PENDING";
+                const canComplete = !isReceived && status === "ACCEPTED";
+
+                return (
+                  <motion.article
+                    key={requestId || idx}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex flex-col justify-between rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs hover:shadow-xs transition"
+                  >
+                    <div>
+                      {/* Top Header */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5">
+                          <div
+                            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${typeInfo.className}`}
+                          >
+                            <TypeIcon className="h-5 w-5" />
+                          </div>
+                          <div>
+                            <h3 className="text-sm font-bold text-[#24342E] truncate max-w-[160px] sm:max-w-[200px]">
+                              {personName}
+                            </h3>
+                            <div className="mt-0.5 flex items-center gap-2 text-[11px] text-[#6F7D76]">
+                              <span>{typeInfo.label}</span>
+                              {request?.createdAt && (
+                                <>
+                                  <span>•</span>
+                                  <span>{formatDate(request.createdAt)}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Status Chip */}
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-bold ${statusConfig.className}`}
+                        >
+                          <StatusIcon className="h-3 w-3" />
+                          {statusConfig.label}
+                        </span>
+                      </div>
+
+                      {/* Visual Timeline Progress */}
+                      <div className="mt-4 border-t border-b border-[#F2F5F3] py-2.5">
+                        <RequestTimeline status={status} />
+                      </div>
+
+                      {/* Description / location */}
+                      <div className="mt-3 space-y-1.5 text-xs text-[#6F7D76]">
+                        {request?.location && (
+                          <div className="flex items-center gap-1.5 text-[11px]">
+                            <MapPin className="h-3 w-3 shrink-0 text-[#8C9892]" />
+                            <span className="truncate">{request.location}</span>
+                          </div>
+                        )}
+                        {request?.description && (
+                          <p className="rounded-xl bg-[#F8FAF9] p-2.5 text-xs leading-relaxed text-[#4A5952]">
+                            {request.description}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="mt-4 pt-2">
+                      {phone && status === "ACCEPTED" && (
+                        <a
+                          href={`tel:${String(phone).replace(/[^\d+]/g, "")}`}
+                          className="mb-3 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-[#D5E7DB] bg-[#EDF7EF] py-2 text-xs font-semibold text-[#356651] transition hover:bg-[#E0F2E5]"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                          Call {personName}
+                        </a>
+                      )}
+
+                      {canRespond && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => handleUpdateStatus(request, "ACCEPTED")}
+                            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#427A65] text-xs font-semibold text-white transition hover:bg-[#356651] disabled:opacity-50"
+                          >
+                            {isUpdating ? (
+                              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <Check className="h-3.5 w-3.5" />
+                            )}
+                            Accept
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => handleUpdateStatus(request, "REJECTED")}
+                            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#F2D5D8] bg-white text-xs font-semibold text-[#C94C55] transition hover:bg-[#FBEAEC] disabled:opacity-50"
+                          >
+                            {isUpdating ? (
+                              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <X className="h-3.5 w-3.5" />
+                            )}
+                            Decline
+                          </button>
+                        </div>
+                      )}
+
+                      {canComplete && (
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => handleUpdateStatus(request, "COMPLETED")}
+                            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#427A65] text-xs font-semibold text-white transition hover:bg-[#356651] disabled:opacity-50"
+                          >
+                            {isUpdating ? (
+                              <LoaderCircle className="h-3.5 w-3.5 animate-spin" />
+                            ) : (
+                              <CheckCircle2 className="h-3.5 w-3.5" />
+                            )}
+                            Done
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isUpdating}
+                            onClick={() => handleUpdateStatus(request, "INCOMPLETED")}
+                            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-[#E2E9E4] bg-white text-xs font-semibold text-[#6F7D76] transition hover:bg-[#F5F8F6] disabled:opacity-50"
+                          >
+                            Incomplete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </motion.article>
+                );
+              })}
             </div>
-
-            <p className="mt-3 text-3xl font-semibold tracking-tight text-[#24342E]">
-              {pendingReceived}
-            </p>
-
-            <p className="mt-1 text-xs text-[#87938C]">
-              Incoming requests to review
-            </p>
-          </div>
-        </div>
-
-        {/* Requests */}
-        <div className="grid items-start gap-6 lg:grid-cols-2">
-          <RequestSection
-            title="Sent requests"
-            subtitle="Track the help you've requested"
-            requests={sentRequests}
-            received={false}
-            icon={Send}
-            onUpdateStatus={handleUpdateStatus}
-            updatingId={updatingId}
-          />
-
-          <RequestSection
-            title="Received requests"
-            subtitle="Respond to people in your community"
-            requests={receivedRequests}
-            received={true}
-            icon={Inbox}
-            onUpdateStatus={handleUpdateStatus}
-            updatingId={updatingId}
-          />
-        </div>
-
-        {/* Closing note */}
-        <div className="mt-8 flex items-start gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-4 sm:p-5">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
-            <ShieldCheck size={20} />
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold text-[#24342E]">
-              Building a more connected community
-            </h3>
-
-            <p className="mt-1 text-sm leading-6 text-[#718078]">
-              Keep your request statuses updated so everyone knows where
-              things stand. A small response can make a meaningful difference.
-            </p>
-          </div>
+          )}
         </div>
       </div>
     </main>

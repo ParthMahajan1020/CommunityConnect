@@ -1,45 +1,17 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Mail, ShieldCheck } from "lucide-react";
+import { motion } from "motion/react";
+import {
+  HeartHandshake,
+  ShieldCheck,
+  Mail,
+  ArrowRight,
+  ArrowLeft,
+  AlertCircle,
+  Loader2,
+  CheckCircle2,
+} from "lucide-react";
 import { forgotPassword } from "../services/api";
-
-function BrandLogo() {
-  return (
-    <Link to="/" className="inline-flex items-center gap-3">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#427A65] text-white shadow-sm">
-        <svg
-          width="25"
-          height="25"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <path
-            d="M12 3.5C12 3.5 5 11 5 15.5a7 7 0 0 0 14 0C19 11 12 3.5 12 3.5Z"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinejoin="round"
-          />
-          <path
-            d="M8.5 15.5a3.5 3.5 0 0 0 3.5 3.5"
-            stroke="currentColor"
-            strokeWidth="1.8"
-            strokeLinecap="round"
-          />
-        </svg>
-      </div>
-
-      <div>
-        <span className="block text-lg font-bold tracking-tight text-[#24342E]">
-          CommunityConnect
-        </span>
-        <span className="block text-xs text-[#6F7D76]">
-          Together, we help.
-        </span>
-      </div>
-    </Link>
-  );
-}
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -49,14 +21,12 @@ export default function ForgotPassword() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const trimmed = email.trim().toLowerCase();
 
-    const trimmedEmail = email.trim().toLowerCase();
-
-    if (!trimmedEmail) {
-      setError("Please enter your registered email address.");
-      setSuccess("");
+    if (!trimmed) {
+      setError("Please enter your registered email.");
       return;
     }
 
@@ -65,106 +35,101 @@ export default function ForgotPassword() {
     setSuccess("");
 
     try {
-      const response = await forgotPassword({
-        email: trimmedEmail,
-      });
+      const response = await forgotPassword({ email: trimmed });
+      setSuccess(response.message || "OTP sent to your email.");
 
-      setSuccess(
-        response.message ||
-          "Password reset OTP has been sent to your registered email."
-      );
-
-      navigate("/reset-password", {
-        state: {
-          email: trimmedEmail,
-        },
-      });
+      setTimeout(() => {
+        navigate("/reset-password", {
+          state: { email: trimmed },
+        });
+      }, 800);
     } catch (err) {
-      if (err?.response?.status === 404) {
-        setError(
-          err?.response?.data?.message || "This email is not registered."
-        );
-      } else {
-        setError(
-          err?.response?.data?.message ||
-            err?.response?.data?.error ||
-            "Unable to process your request. Please try again."
-        );
-      }
+      setError(
+        err?.response?.data?.message ||
+          (err?.response?.status === 404
+            ? "Email not registered."
+            : "Request failed. Try again.")
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen bg-[#F8FAF9] px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-md">
-        <header className="mb-8">
-          <BrandLogo />
-        </header>
+    <main className="min-h-screen bg-[#F8FAF9] px-4 py-8 sm:px-6 lg:px-8 flex items-center justify-center">
+      <div className="w-full max-w-md">
+        {/* Brand */}
+        <div className="mb-6 flex justify-center">
+          <Link to="/" className="inline-flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
+              <HeartHandshake className="h-5 w-5" />
+            </div>
+            <span className="text-base font-bold tracking-tight text-[#24342E]">
+              CommunityConnect
+            </span>
+          </Link>
+        </div>
 
-        <section className="rounded-3xl border border-[#E2E9E4] bg-white p-6 shadow-[0_12px_50px_rgba(36,52,46,0.04)] sm:p-8">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65]">
+        {/* Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-3xl border border-[#E2E9E4] bg-white p-7 sm:p-9 shadow-xs"
+        >
+          {/* Security Icon */}
+          <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65]">
             <ShieldCheck className="h-6 w-6" />
           </div>
 
-          <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-[#427A65]">
-            Account recovery
-          </p>
-
-          <h1 className="mt-3 text-3xl font-semibold tracking-tight text-[#24342E]">
-            Forgot your password?
+          <h1 className="text-2xl font-bold tracking-tight text-[#24342E]">
+            Reset Password
           </h1>
-
-          <p className="mt-3 text-sm leading-6 text-[#6F7D76]">
-            Enter the email address you used to create your CommunityConnect
-            account. If it is registered, we'll send instructions to reset your
-            password.
+          <p className="mt-1 text-xs text-[#6F7D76]">
+            Enter your registered email to receive a recovery code.
           </p>
 
           {error && (
             <div
               role="alert"
-              className="mt-6 rounded-xl border border-[#F0D1D5] bg-[#FBEAEC] px-4 py-3 text-sm leading-6 text-[#A63843]"
+              className="mt-4 flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-medium text-rose-700"
             >
-              {error}
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
           {success && (
             <div
               role="status"
-              className="mt-6 rounded-xl border border-[#D4E7D9] bg-[#EDF7EF] px-4 py-3 text-sm leading-6 text-[#356651]"
+              className="mt-4 flex items-center gap-2 rounded-2xl border border-[#D5E7DB] bg-[#EDF7EF] p-3 text-xs font-medium text-[#356651]"
             >
-              {success}
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>{success}</span>
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             <div>
               <label
                 htmlFor="email"
-                className="mb-2 block text-sm font-medium text-[#34463D]"
+                className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
               >
-                Registered email
+                Registered Email
               </label>
-
               <div className="relative">
-                <Mail className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A9891]" />
-
+                <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
                 <input
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="email"
                   value={email}
-                  onChange={(event) => {
-                    setEmail(event.target.value);
+                  onChange={(e) => {
+                    setEmail(e.target.value);
                     setError("");
-                    setSuccess("");
                   }}
                   placeholder="you@example.com"
-                  className="h-12 w-full rounded-xl border border-[#E2E9E4] bg-[#FBFCFB] pl-11 pr-4 text-sm text-[#24342E] outline-none transition placeholder:text-[#9AA69F] focus:border-[#427A65] focus:bg-white focus:ring-4 focus:ring-[#427A65]/10"
+                  required
+                  className="h-11 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs text-[#24342E] outline-none transition focus:border-[#427A65] focus:bg-white"
                 />
               </div>
             </div>
@@ -172,23 +137,32 @@ export default function ForgotPassword() {
             <button
               type="submit"
               disabled={loading || !email.trim()}
-              className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-[#427A65] px-5 text-sm font-semibold text-white transition hover:bg-[#356651] disabled:cursor-not-allowed disabled:bg-[#9AA69F]"
+              className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#427A65] text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651] disabled:opacity-60"
             >
-              {loading ? "Checking email..." : "Reset password"}
+              {loading ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Sending Code...
+                </>
+              ) : (
+                <>
+                  Send OTP
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </button>
           </form>
 
-          <div className="mt-6 border-t border-[#EEF2EF] pt-6">
-            <button
-              type="button"
-              onClick={() => navigate("/login")}
-              className="inline-flex items-center gap-2 text-sm font-medium text-[#427A65] transition hover:text-[#356651]"
+          <div className="mt-6 border-t border-[#EEF2EF] pt-4 text-center">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6F7D76] hover:text-[#24342E]"
             >
-              <ArrowLeft className="h-4 w-4" />
-              Back to login
-            </button>
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back to Login
+            </Link>
           </div>
-        </section>
+        </motion.div>
       </div>
     </main>
   );

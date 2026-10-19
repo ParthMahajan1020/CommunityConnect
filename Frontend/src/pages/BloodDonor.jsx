@@ -1,417 +1,367 @@
 import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 import {
-    registerBloodDonor,
-    getProfile,
-} from "../services/api";
+  Droplets,
+  MapPin,
+  ShieldCheck,
+  AlertCircle,
+  Loader2,
+  Heart,
+  Radio,
+  ArrowRight,
+} from "lucide-react";
+import { registerBloodDonor, getProfile } from "../services/api";
+import { AnimatedBloodDrop } from "../components/visuals/BloodVisual";
+import { AnimatedSuccessCheck } from "../components/visuals/SuccessStateVisual";
+import { useNavigate } from "react-router-dom";
 
-const bloodGroups = [
-    "A+", "A-", "B+", "B-",
-    "AB+", "AB-", "O+", "O-",
-];
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
-function BloodDonor() {
-    const [formData, setFormData] = useState({
-        bloodGroup: "",
-        location: "",
-        availability: true,
-    });
+export default function BloodDonor() {
+  const navigate = useNavigate();
 
-    const [loading, setLoading] = useState(true);
-    const [registering, setRegistering] = useState(false);
-    const [message, setMessage] = useState("");
-    const [error, setError] = useState("");
-    const [registered, setRegistered] = useState(false);
+  const [formData, setFormData] = useState({
+    bloodGroup: "",
+    location: "",
+    availability: true,
+  });
 
-    useEffect(() => {
-        let active = true;
+  const [loading, setLoading] = useState(true);
+  const [registering, setRegistering] = useState(false);
+  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
+  const [registered, setRegistered] = useState(false);
 
-        const loadProfile = async () => {
-            try {
-                const response = await getProfile();
-
-                if (!active) return;
-
-                const user = response.user;
-
-                setFormData((prev) => ({
-                    ...prev,
-                    location: user?.location || "",
-                }));
-            } catch (err) {
-                if (!active) return;
-
-                setError(
-                    err.response?.data?.message ||
-                    "Failed to load your profile."
-                );
-            } finally {
-                if (active) setLoading(false);
-            }
-        };
-
-        loadProfile();
-
-        return () => {
-            active = false;
-        };
-    }, []);
-
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-
+  useEffect(() => {
+    let active = true;
+    const loadProfile = async () => {
+      try {
+        const response = await getProfile();
+        if (!active) return;
+        const user = response.user;
         setFormData((prev) => ({
-            ...prev,
-            [name]: value,
+          ...prev,
+          location: user?.location || "",
         }));
-
-        setError("");
-        setMessage("");
+      } catch (err) {
+        if (!active) return;
+        setError(err.response?.data?.message || "Failed to load profile.");
+      } finally {
+        if (active) setLoading(false);
+      }
     };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        setError("");
-        setMessage("");
-
-        if (!formData.bloodGroup || !formData.location.trim()) {
-            setError(
-                "Please select your blood group and enter your location."
-            );
-            return;
-        }
-
-        let user;
-
-        try {
-            user = JSON.parse(localStorage.getItem("user"));
-        } catch {
-            user = null;
-        }
-
-        const userId = user?.id || user?._id;
-
-        if (!userId) {
-            setError("User information not found. Please log in again.");
-            return;
-        }
-
-        setRegistering(true);
-
-        try {
-            const response = await registerBloodDonor({
-                userId,
-                bloodGroup: formData.bloodGroup,
-                location: formData.location.trim(),
-                availability: formData.availability,
-            });
-
-            setMessage(
-                response.message ||
-                "You are now registered as a blood donor."
-            );
-
-            setRegistered(true);
-        } catch (err) {
-            const status = err.response?.status;
-
-            if (status === 409) {
-                setRegistered(true);
-            }
-
-            setError(
-                err.response?.data?.message ||
-                "Failed to register as a blood donor."
-            );
-        } finally {
-            setRegistering(false);
-        }
+    loadProfile();
+    return () => {
+      active = false;
     };
+  }, []);
 
-    if (loading) {
-        return (
-            <main className="flex min-h-[70vh] items-center justify-center bg-[#F8FAF9] px-4">
-                <div className="text-center">
-                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-[#F0D5D8] border-t-[#C94C55]" />
-                    <p className="mt-4 text-sm text-[#6F7D76]">
-                        Loading your profile...
-                    </p>
-                </div>
-            </main>
-        );
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+    setError("");
+    setMessage("");
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError("");
+    setMessage("");
+
+    if (!formData.bloodGroup || !formData.location.trim()) {
+      setError("Please select blood group and location.");
+      return;
     }
 
+    let user;
+    try {
+      user = JSON.parse(localStorage.getItem("user"));
+    } catch {
+      user = null;
+    }
+
+    const userId = user?.id || user?._id;
+    if (!userId) {
+      setError("Please log in first.");
+      return;
+    }
+
+    setRegistering(true);
+
+    try {
+      const response = await registerBloodDonor({
+        userId,
+        bloodGroup: formData.bloodGroup,
+        location: formData.location.trim(),
+        availability: formData.availability,
+      });
+
+      setMessage(response.message || "Registration complete.");
+      setRegistered(true);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setRegistered(true);
+      }
+      setError(
+        err.response?.data?.message || "Failed to register as a donor."
+      );
+    } finally {
+      setRegistering(false);
+    }
+  };
+
+  if (loading) {
     return (
-        <main className="min-h-screen bg-[#F8FAF9] px-4 py-8 sm:px-6 sm:py-12">
-            <div className="mx-auto max-w-6xl">
-
-                {/* Hero */}
-                <section className="relative overflow-hidden rounded-[2rem] border border-[#F0DDDF] bg-gradient-to-br from-white to-[#FBEAEC] px-5 py-10 sm:px-10 sm:py-14">
-                    <div className="absolute -right-10 -top-16 h-60 w-60 rounded-full bg-[#C94C55]/5 blur-3xl" />
-
-                    <div className="relative z-10 max-w-2xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#F0D5D8] bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#B83E49]">
-                            <span className="h-2 w-2 rounded-full bg-[#C94C55]" />
-                            Become a donor
-                        </div>
-
-                        <h1 className="mt-6 text-3xl font-semibold tracking-tight text-[#24342E] sm:text-5xl">
-                            Give blood.
-                            <br />
-                            Give someone hope.
-                        </h1>
-
-                        <p className="mt-4 max-w-xl text-sm leading-7 text-[#6F7D76] sm:text-base">
-                            Register as a blood donor and let your
-                            community know when you're available to help.
-                            A small step from you could make a meaningful difference.
-                        </p>
-                    </div>
-                </section>
-
-                <div className="mt-7 grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-
-                    {/* Information panel */}
-                    <aside className="rounded-3xl bg-[#24342E] p-6 text-white sm:p-8">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-2xl font-semibold text-[#F2A1A7]">
-                            +
-                        </div>
-
-                        <p className="mt-7 text-xs font-semibold uppercase tracking-[0.18em] text-[#F2A1A7]">
-                            CommunityConnect
-                        </p>
-
-                        <h2 className="mt-3 text-2xl font-semibold leading-snug sm:text-3xl">
-                            A little help can mean everything.
-                        </h2>
-
-                        <p className="mt-4 text-sm leading-7 text-white/65">
-                            Join the community of people who are willing
-                            to help others during important moments.
-                        </p>
-
-                        <div className="mt-8 space-y-6">
-                            {[
-                                {
-                                    number: "01",
-                                    title: "Register your details",
-                                    description:
-                                        "Select your blood group and preferred location.",
-                                },
-                                {
-                                    number: "02",
-                                    title: "Manage availability",
-                                    description:
-                                        "Choose whether you're currently available to donate.",
-                                },
-                                {
-                                    number: "03",
-                                    title: "Connect with people",
-                                    description:
-                                        "Receive connection requests from people seeking help.",
-                                },
-                            ].map((item) => (
-                                <div key={item.number} className="flex gap-4">
-                                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-xs font-semibold text-[#F2A1A7]">
-                                        {item.number}
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-sm font-semibold">
-                                            {item.title}
-                                        </h3>
-
-                                        <p className="mt-1 text-sm leading-6 text-white/55">
-                                            {item.description}
-                                        </p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </aside>
-
-                    {/* Registration form */}
-                    <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-sm sm:p-8">
-                        {registered && !error ? (
-                            <div className="flex min-h-[400px] flex-col items-center justify-center text-center">
-                                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E5F1EA] text-3xl text-[#427A65]">
-                                    ✓
-                                </div>
-
-                                <h2 className="mt-5 text-2xl font-semibold text-[#24342E]">
-                                    You're registered!
-                                </h2>
-
-                                <p className="mt-3 max-w-sm text-sm leading-6 text-[#6F7D76]">
-                                    Your blood donor registration has been
-                                    processed. Thank you for being part of
-                                    the community.
-                                </p>
-
-                                <div className="mt-6 rounded-2xl border border-[#F0D5D8] bg-[#FBEAEC] px-8 py-4">
-                                    <p className="text-xs font-medium uppercase tracking-wider text-[#B83E49]">
-                                        Your blood group
-                                    </p>
-
-                                    <p className="mt-1 text-3xl font-semibold text-[#C94C55]">
-                                        {formData.bloodGroup}
-                                    </p>
-                                </div>
-
-                                {message && (
-                                    <p role="status" className="mt-5 text-sm text-[#427A65]">
-                                        {message}
-                                    </p>
-                                )}
-                            </div>
-                        ) : (
-                            <form onSubmit={handleSubmit}>
-                                <div className="mb-7">
-                                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#C94C55]">
-                                        Donor registration
-                                    </p>
-
-                                    <h2 className="mt-2 text-2xl font-semibold text-[#24342E]">
-                                        Your donor details
-                                    </h2>
-
-                                    <p className="mt-2 text-sm leading-6 text-[#6F7D76]">
-                                        Add the information people need to
-                                        find you.
-                                    </p>
-                                </div>
-
-                                <div>
-                                    <label
-                                        htmlFor="donor-blood-group"
-                                        className="mb-2 block text-sm font-medium text-[#34463D]"
-                                    >
-                                        Blood group
-                                    </label>
-
-                                    <select
-                                        id="donor-blood-group"
-                                        name="bloodGroup"
-                                        value={formData.bloodGroup}
-                                        onChange={handleChange}
-                                        required
-                                        className="w-full rounded-xl border border-[#E2E9E4] bg-[#FAFBFA] px-4 py-3.5 text-sm text-[#24342E] outline-none transition focus:border-[#C94C55] focus:bg-white focus:ring-4 focus:ring-[#FBEAEC]"
-                                    >
-                                        <option value="">
-                                            Select your blood group
-                                        </option>
-
-                                        {bloodGroups.map((group) => (
-                                            <option key={group} value={group}>
-                                                {group}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className="mt-5">
-                                    <label
-                                        htmlFor="donor-location"
-                                        className="mb-2 block text-sm font-medium text-[#34463D]"
-                                    >
-                                        Location
-                                    </label>
-
-                                    <input
-                                        id="donor-location"
-                                        type="text"
-                                        name="location"
-                                        value={formData.location}
-                                        onChange={handleChange}
-                                        placeholder="e.g. Akurdi, Pune"
-                                        autoComplete="address-level2"
-                                        required
-                                        className="w-full rounded-xl border border-[#E2E9E4] bg-[#FAFBFA] px-4 py-3.5 text-sm text-[#24342E] outline-none transition placeholder:text-[#9AA69F] focus:border-[#C94C55] focus:bg-white focus:ring-4 focus:ring-[#FBEAEC]"
-                                    />
-
-                                    <p className="mt-2 text-xs leading-5 text-[#8A9690]">
-                                        Enter the area where you are generally
-                                        available to help.
-                                    </p>
-                                </div>
-
-                                <div className="mt-6 flex items-center justify-between gap-4 rounded-2xl border border-[#E2E9E4] bg-[#FAFBFA] p-4">
-                                    <div>
-                                        <p className="text-sm font-semibold text-[#24342E]">
-                                            Available to donate
-                                        </p>
-
-                                        <p className="mt-1 text-xs leading-5 text-[#6F7D76]">
-                                            Let people know if you're available.
-                                        </p>
-                                    </div>
-
-                                    <button
-                                        type="button"
-                                        role="switch"
-                                        aria-checked={formData.availability}
-                                        aria-label="Available to donate"
-                                        onClick={() =>
-                                            setFormData((prev) => ({
-                                                ...prev,
-                                                availability: !prev.availability,
-                                            }))
-                                        }
-                                        className={`relative h-7 w-12 shrink-0 rounded-full transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FBEAEC] ${
-                                            formData.availability
-                                                ? "bg-[#427A65]"
-                                                : "bg-[#CBD3CE]"
-                                        }`}
-                                    >
-                                        <span
-                                            className={`absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-all ${
-                                                formData.availability
-                                                    ? "left-6"
-                                                    : "left-1"
-                                            }`}
-                                        />
-                                    </button>
-                                </div>
-
-                                {error && (
-                                    <div
-                                        role="alert"
-                                        className="mt-5 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
-                                    >
-                                        {error}
-                                    </div>
-                                )}
-
-                                {message && (
-                                    <div
-                                        role="status"
-                                        className="mt-5 rounded-xl border border-[#D7E9DD] bg-[#F0F7F2] px-4 py-3 text-sm text-[#427A65]"
-                                    >
-                                        {message}
-                                    </div>
-                                )}
-
-                                <button
-                                    type="submit"
-                                    disabled={registering}
-                                    className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#C94C55] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#B83E49] disabled:cursor-not-allowed disabled:opacity-60"
-                                >
-                                    {registering
-                                        ? "Registering..."
-                                        : "Register as a donor"}
-                                </button>
-
-                                <p className="mt-4 text-center text-xs leading-5 text-[#8A9690]">
-                                    Your contact information is taken from
-                                    your CommunityConnect profile.
-                                </p>
-                            </form>
-                        )}
-                    </section>
-                </div>
-            </div>
-        </main>
+      <div className="flex min-h-[40vh] items-center justify-center bg-[#F8FAF9]">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-7 w-7 animate-spin text-[#C94C55]" />
+          <span className="text-xs text-[#6F7D76]">Loading donor profile...</span>
+        </div>
+      </div>
     );
-}
+  }
 
-export default BloodDonor;
+  return (
+    <div className="w-full bg-[#F8FAF9] px-4 py-5 sm:px-6 sm:py-7">
+      <div className="mx-auto max-w-4xl space-y-5">
+        {/* Compact Header Hero */}
+        <section className="relative overflow-hidden rounded-3xl border border-[#F2D5D8] bg-gradient-to-br from-white via-[#FCF9FA] to-[#FBEAEC] p-5 shadow-2xs sm:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-[#F0D5D8] bg-white px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-[#C94C55]">
+                <Heart className="h-3 w-3 fill-[#C94C55]" />
+                Donor Registry
+              </div>
+
+              <h1 className="text-2xl font-bold tracking-tight text-[#24342E] sm:text-3xl">
+                Donate Blood
+              </h1>
+              <p className="mt-1 text-xs text-[#6F7D76]">
+                Make yourself discoverable to nearby neighbors in critical need.
+              </p>
+            </div>
+
+            <div className="hidden sm:block shrink-0">
+              <AnimatedBloodDrop size="md" pulse />
+            </div>
+          </div>
+        </section>
+
+        {registered && !error ? (
+          /* Confirmation Screen */
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-3xl border border-[#D5E7DB] bg-white p-6 sm:p-8 text-center shadow-2xs"
+          >
+            <AnimatedSuccessCheck
+              title="You're Registered as a Donor!"
+              subtitle={message || "Neighbors requiring your blood group can now connect with you."}
+              accent="red"
+            />
+
+            <div className="mx-auto mt-4 inline-flex items-center gap-2.5 rounded-2xl border border-[#F2D5D8] bg-[#FBEAEC] px-5 py-2.5">
+              <span className="text-xs font-semibold uppercase text-[#C94C55]">
+                Registered Group:
+              </span>
+              <span className="text-xl font-bold text-[#C94C55]">
+                {formData.bloodGroup}
+              </span>
+            </div>
+
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                type="button"
+                onClick={() => navigate("/requests")}
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#24342E] px-5 py-2.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#34463D]"
+              >
+                View Requests
+                <ArrowRight className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          </motion.div>
+        ) : (
+          /* Visual Onboarding Form */
+          <div className="grid gap-5 md:grid-cols-[1.1fr_0.9fr]">
+            <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs sm:p-6">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Blood Group selection */}
+                <div>
+                  <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#6F7D76]">
+                    Your Blood Group
+                  </label>
+
+                  <div className="grid grid-cols-4 gap-2">
+                    {bloodGroups.map((group) => {
+                      const isSelected = formData.bloodGroup === group;
+                      return (
+                        <button
+                          key={group}
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              bloodGroup: group,
+                            }))
+                          }
+                          className={`flex h-11 items-center justify-center rounded-2xl border text-xs font-bold transition-all active:scale-95 ${
+                            isSelected
+                              ? "border-[#C94C55] bg-[#C94C55] text-white shadow-xs"
+                              : "border-[#E2E9E4] bg-[#FBFCFB] text-[#24342E] hover:border-[#F0D5D8]"
+                          }`}
+                        >
+                          {group}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Location Input */}
+                <div>
+                  <label
+                    htmlFor="donor-location"
+                    className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6F7D76]"
+                  >
+                    Location Area
+                  </label>
+                  <div className="relative">
+                    <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B9891]" />
+                    <input
+                      id="donor-location"
+                      name="location"
+                      type="text"
+                      value={formData.location}
+                      onChange={handleChange}
+                      placeholder="e.g. Akurdi, Pune"
+                      required
+                      className="h-11 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs text-[#24342E] outline-none transition focus:border-[#C94C55] focus:bg-white focus:ring-2 focus:ring-[#C94C55]/10"
+                    />
+                  </div>
+                </div>
+
+                {/* Live Availability Switch */}
+                <div className="flex items-center justify-between rounded-2xl border border-[#E2E9E4] bg-[#FAFBFA] p-3.5">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`flex h-8 w-8 items-center justify-center rounded-xl ${
+                        formData.availability
+                          ? "bg-[#E5F1EA] text-[#427A65]"
+                          : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      <Radio className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-[#24342E]">
+                        Available to Donate
+                      </p>
+                      <p className="text-[11px] text-[#6F7D76]">
+                        {formData.availability ? "Active on network" : "Paused"}
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={formData.availability}
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        availability: !prev.availability,
+                      }))
+                    }
+                    className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
+                      formData.availability ? "bg-[#427A65]" : "bg-[#CBD3CE]"
+                    }`}
+                  >
+                    <span
+                      className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-all ${
+                        formData.availability ? "left-5.5" : "left-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {error && (
+                  <div
+                    role="alert"
+                    className="flex items-center gap-2 rounded-xl border border-[#F2D5D8] bg-[#FBEAEC] px-3.5 py-2.5 text-xs font-medium text-[#C94C55]"
+                  >
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={registering}
+                  className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#C94C55] px-5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#B53D46] disabled:opacity-60"
+                >
+                  {registering ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      Registering...
+                    </>
+                  ) : (
+                    <>
+                      Confirm Donor Profile
+                      <ArrowRight className="h-4 w-4" />
+                    </>
+                  )}
+                </button>
+              </form>
+            </section>
+
+            {/* Visual Neighborhood Impact Card */}
+            <aside className="flex flex-col justify-between rounded-3xl border border-[#E2E9E4] bg-gradient-to-br from-[#24342E] to-[#1B2923] p-5 text-white shadow-2xs sm:p-6">
+              <div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#F2A1A7]">
+                  <Heart className="h-4 w-4 fill-[#F2A1A7]" />
+                </div>
+
+                <h3 className="mt-4 text-lg font-bold leading-tight">
+                  You can help someone nearby.
+                </h3>
+                <p className="mt-1.5 text-xs leading-relaxed text-white/70">
+                  Your location enables instant local matching during critical hours.
+                </p>
+
+                {/* Animated visual pulse ring */}
+                <div className="relative mt-5 flex h-24 items-center justify-center">
+                  <motion.div
+                    animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0.1, 0.4] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute h-22 w-22 rounded-full border border-[#F2A1A7]/30"
+                  />
+                  <motion.div
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.6, 0.2, 0.6] }}
+                    transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute h-16 w-16 rounded-full border border-[#F2A1A7]/40"
+                  />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-xs text-[#F2A1A7]">
+                    <Droplets className="h-5 w-5" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 p-3 text-xs text-white/80">
+                <div className="flex items-center gap-1.5 font-semibold">
+                  <ShieldCheck className="h-3.5 w-3.5 text-[#75C89F]" />
+                  <span>Privacy Protected</span>
+                </div>
+                <p className="mt-1 text-[11px] text-white/60">
+                  Contact details shared only upon connection acceptance.
+                </p>
+              </div>
+            </aside>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

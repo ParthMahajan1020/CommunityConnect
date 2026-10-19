@@ -1,528 +1,300 @@
+import { useNavigate } from "react-router-dom";
+import { motion } from "motion/react";
 import {
   ArrowRight,
-  CheckCircle2,
   Droplets,
   HeartHandshake,
-  MapPinned,
-  ShieldCheck,
-  Sparkles,
-  UserRoundPlus,
   Wrench,
+  UserRoundPlus,
+  Sparkles,
+  ShieldCheck,
+  Activity,
+  Clock3,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import NetworkIllustration from "../components/visuals/NetworkIllustration";
 
-const primaryActions = [
-  {
-    title: "Need Blood",
-    description: "Find a suitable donor near you when timing matters most.",
-    accent: "red",
-    route: "/blood",
-    icon: Droplets,
-  },
-  {
-    title: "Donate Blood",
-    description:
-      "Register as a donor and help your community when someone needs you.",
-    accent: "red",
-    route: "/blood/donor",
-    icon: HeartHandshake,
-  },
-  {
-    title: "Need Help",
-    description:
-      "Discover trusted local helpers for home, repair, and daily needs.",
-    accent: "blue",
-    route: "/services",
-    icon: Wrench,
-  },
-  {
-    title: "Provide Help",
-    description:
-      "Share your skills and become an available local service provider.",
-    accent: "blue",
-    route: "/services/provider",
-    icon: UserRoundPlus,
-  },
-];
-
-const howItWorks = [
-  "Choose what you need.",
-  "Find a suitable available person.",
-  "Send a request and manage the connection.",
-];
-
-const communityHighlights = [
-  "Blood support for urgent and local needs",
-  "Care for household and everyday tasks",
-  "Clear request flow for both donors and helpers",
-];
-
-function Home() {
+export default function Home() {
   const navigate = useNavigate();
+
+  const featureBlocks = [
+    {
+      id: "blood-find",
+      title: "Need Blood",
+      subtitle: "8 blood groups covered",
+      route: "/blood",
+      icon: Droplets,
+      accent: "red",
+      tag: "Urgent",
+      bg: "hover:border-[#E8BFC4] hover:shadow-[0_12px_30px_rgba(201,76,85,0.08)]",
+    },
+    {
+      id: "blood-donate",
+      title: "Donate Blood",
+      subtitle: "Save someone nearby",
+      route: "/blood/donor",
+      icon: HeartHandshake,
+      accent: "red",
+      tag: "Give Hope",
+      bg: "hover:border-[#E8BFC4] hover:shadow-[0_12px_30px_rgba(201,76,85,0.08)]",
+    },
+    {
+      id: "service-find",
+      title: "Need Help",
+      subtitle: "Verified local helpers",
+      route: "/services",
+      icon: Wrench,
+      accent: "blue",
+      tag: "Daily Care",
+      bg: "hover:border-[#BED2E8] hover:shadow-[0_12px_30px_rgba(75,120,168,0.08)]",
+    },
+    {
+      id: "service-provide",
+      title: "Provide Help",
+      subtitle: "Share your skills",
+      route: "/services/provider",
+      icon: UserRoundPlus,
+      accent: "blue",
+      tag: "Community",
+      bg: "hover:border-[#BED2E8] hover:shadow-[0_12px_30px_rgba(75,120,168,0.08)]",
+    },
+  ];
+
+  const steps = [
+    {
+      num: "01",
+      title: "Choose need",
+      caption: "Blood or local service",
+      icon: Activity,
+    },
+    {
+      num: "02",
+      title: "Match nearby",
+      caption: "Instant local availability",
+      icon: Sparkles,
+    },
+    {
+      num: "03",
+      title: "Connect directly",
+      caption: "Fast, peer-to-peer request",
+      icon: ShieldCheck,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-[#F8FAF9] text-[#24342E]">
-      <main className="mx-auto w-full max-w-7xl px-4 pb-12 pt-5 sm:px-6 sm:pb-16 sm:pt-8 lg:px-8">
-        {/* Hero Section */}
-        <section className="relative overflow-hidden rounded-[1.75rem] border border-[#E2E9E4] bg-white px-5 py-7 shadow-[0_10px_30px_rgba(36,52,46,0.04)] sm:rounded-[2rem] sm:px-8 sm:py-8 lg:px-12 lg:py-12">
-          <div className="absolute inset-y-0 right-0 hidden w-1/2 bg-[radial-gradient(circle_at_center,_rgba(66,122,101,0.10),_transparent_62%)] lg:block" />
-
-          <div className="relative grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+      <main className="mx-auto max-w-7xl px-4 pb-16 pt-6 sm:px-6 sm:pt-8 lg:px-8">
+        {/* =======================================================
+            HERO: Visual Network + Concise Headline
+        ======================================================= */}
+        <section className="relative overflow-hidden rounded-[2rem] border border-[#E2E9E4] bg-white p-6 shadow-[0_12px_40px_rgba(36,52,46,0.04)] sm:p-10 lg:p-12">
+          <div className="grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-12">
+            {/* Left Headline */}
             <div>
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DDE7E1] bg-[#F0F5F2] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#427A65] sm:mb-5">
-                <Sparkles className="h-3.5 w-3.5" />
-                Community support
-              </div>
-
-              <h1 className="max-w-xl text-3xl font-bold tracking-[-0.05em] text-[#24342E] sm:text-5xl lg:text-6xl">
-                Help is closer than you think.
-              </h1>
-
-              <p className="mt-4 max-w-xl text-sm leading-6 text-[#6F7D76] sm:mt-5 sm:text-lg sm:leading-7">
-                Find trusted blood donors and local helpers in your community.
-                Connect with people who can make a difference when you need it
-                most.
-              </p>
-            </div>
-
-            {/* Community Highlights */}
-            <div className="relative hidden justify-center lg:flex lg:justify-end">
-              <div className="w-full max-w-md rounded-[1.8rem] border border-[#E2E9E4] bg-[#F0F5F2] p-5 shadow-[0_18px_40px_rgba(66,122,101,0.08)]">
-                <div className="rounded-[1.4rem] bg-white p-5">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65]">
-                        <MapPinned className="h-5 w-5" />
-                      </div>
-
-                      <div>
-                        <p className="text-sm font-medium text-[#6F7D76]">
-                          Nearby support
-                        </p>
-                        <p className="text-sm font-semibold text-[#24342E]">
-                          Your neighborhood
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="rounded-full bg-[#EAF1FA] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-[#6C8FBC]">
-                      Local
-                    </div>
-                  </div>
-
-                  <div className="mt-5 space-y-3">
-                    {communityHighlights.map((item) => (
-                      <div
-                        key={item}
-                        className="flex items-start gap-3 rounded-2xl border border-[#EEF2EF] bg-[#F8FAF9] p-3"
-                      >
-                        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#427A65]" />
-                        <p className="text-sm leading-6 text-[#24342E]">
-                          {item}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Primary Actions: Compact on Mobile */}
-        <section className="mt-9 sm:mt-14">
-          <div className="mb-5 sm:mb-6">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6F7D76]">
-              Start here
-            </p>
-
-            <h2 className="mt-2 max-w-lg text-2xl font-bold tracking-[-0.04em] text-[#24342E] sm:text-3xl">
-              Choose how you want to help
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-4">
-            {primaryActions.map(
-              ({ title, description, accent, route, icon: Icon }) => {
-                const isBlood = accent === "red";
-
-                return (
-                  <button
-                    key={title}
-                    type="button"
-                    onClick={() => navigate(route)}
-                    aria-label={`${title}: ${description}`}
-                    className={`group flex min-h-[142px] min-w-0 flex-col items-start rounded-2xl border p-3.5 text-left transition duration-200 active:scale-[0.98] sm:min-h-[210px] sm:rounded-[1.6rem] sm:p-5 lg:hover:-translate-y-1 lg:hover:shadow-[0_18px_32px_rgba(36,52,46,0.06)] ${
-                      isBlood
-                        ? "border-[#F2D9DC] bg-[#FBEAEC] hover:border-[#EBC4C9]"
-                        : "border-[#DDE8F6] bg-[#EAF1FA] hover:border-[#C9D9ED]"
-                    }`}
-                  >
-                    {/* Icon */}
-                    <div
-                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white sm:h-12 sm:w-12 ${
-                        isBlood ? "text-[#C94C55]" : "text-[#6C8FBC]"
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" strokeWidth={1.8} />
-                    </div>
-
-                    {/* Action title */}
-                    <div className="mt-3 flex w-full min-w-0 items-center justify-between gap-1.5 sm:mt-5 sm:gap-2">
-                      <h3 className="min-w-0 text-[15px] font-semibold leading-snug tracking-[-0.035em] text-[#24342E] sm:text-xl">
-                        {title}
-                      </h3>
-
-                      <ArrowRight
-                        className={`h-4 w-4 shrink-0 transition-transform group-hover:translate-x-1 ${
-                          isBlood ? "text-[#C94C55]" : "text-[#6C8FBC]"
-                        }`}
-                      />
-                    </div>
-
-                    {/* Descriptions only on larger screens */}
-                    <p className="mt-2 hidden text-sm leading-6 text-[#6F7D76] sm:block">
-                      {description}
-                    </p>
-                  </button>
-                );
-              }
-            )}
-          </div>
-        </section>
-
-        {/* Why CommunityConnect */}
-        <section className="mt-10 rounded-[1.75rem] border border-[#E2E9E4] bg-white p-5 sm:mt-16 sm:rounded-[2rem] sm:p-8 lg:p-10">
-          <div className="grid gap-6 lg:grid-cols-[1fr_1.2fr] lg:items-center lg:gap-8">
-            <div className="rounded-[1.4rem] bg-[#F4F8F6] p-5 sm:p-6">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65] sm:h-16 sm:w-16">
-                <ShieldCheck className="h-7 w-7" />
-              </div>
-
-              <h2 className="mt-4 text-2xl font-bold tracking-[-0.04em] text-[#24342E] sm:mt-6 sm:text-3xl">
-                Finding the right help should be simple.
-              </h2>
-            </div>
-
-            <div className="space-y-5 text-sm leading-7 text-[#6F7D76] sm:text-base">
-              <div>
-                <h3 className="mb-2 text-lg font-semibold text-[#24342E] sm:text-xl">
-                  Blood
-                </h3>
-
-                <p>
-                  During a stressful moment, locating an available and suitable
-                  donor can be difficult. CommunityConnect lets people find
-                  nearby matches without the confusion of scattered messages
-                  or missed calls.
-                </p>
-              </div>
-
-              <div>
-                <h3 className="mb-2 text-lg font-semibold text-[#24342E] sm:text-xl">
-                  Local services
-                </h3>
-
-                <p>
-                  Finding the right person for home help, upkeep, or practical
-                  support nearby can take time. CommunityConnect brings local
-                  providers and requesters into one simple, easy-to-use
-                  experience.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Blood Information: Desktop Only */}
-        <section className="mt-16 hidden gap-6 lg:grid lg:grid-cols-2">
-          <div className="rounded-[2rem] border border-[#F2D9DC] bg-[#FBEAEC] p-8">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#C94C55]">
-              <Droplets className="h-3.5 w-3.5" />
-              Blood care
-            </div>
-
-            <h2 className="text-3xl font-bold tracking-[-0.04em] text-[#24342E]">
-              Looking for a blood donor?
-            </h2>
-
-            <p className="mt-3 max-w-lg leading-7 text-[#6F7D76]">
-              Search for nearby donors based on location and blood group to
-              connect with the right person when you need support.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => navigate("/blood")}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#C94C55] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#b74249]"
-            >
-              Find Blood
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="rounded-[2rem] border border-[#F2D9DC] bg-white p-8">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#FBEAEC] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#C94C55]">
-              <HeartHandshake className="h-3.5 w-3.5" />
-              Give back
-            </div>
-
-            <h2 className="text-3xl font-bold tracking-[-0.04em] text-[#24342E]">
-              Become a donor
-            </h2>
-
-            <p className="mt-3 max-w-lg leading-7 text-[#6F7D76]">
-              Register to help people in your area. Your availability and
-              location can make a real difference for someone who needs blood
-              support.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => navigate("/blood/donor")}
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#E2C8CB] bg-[#FFF7F7] px-5 py-3 text-sm font-semibold text-[#C94C55] transition hover:bg-[#FDEDEF]"
-            >
-              Become a Donor
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </section>
-
-        {/* Local Services Information: Desktop Only */}
-        <section className="mt-16 hidden gap-6 lg:grid lg:grid-cols-2">
-          <div className="rounded-[2rem] border border-[#DDE8F6] bg-[#EAF1FA] p-8">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#6C8FBC]">
-              <Wrench className="h-3.5 w-3.5" />
-              Local services
-            </div>
-
-            <h2 className="text-3xl font-bold tracking-[-0.04em] text-[#24342E]">
-              Need help around the house?
-            </h2>
-
-            <p className="mt-3 max-w-lg leading-7 text-[#6F7D76]">
-              Explore trusted local helpers for housekeeping, plumbing,
-              electrical work, cleaning, and other everyday services. You can
-              specify the type and duration of help you need and connect with
-              available people nearby.
-            </p>
-
-            <ul className="mt-5 flex flex-wrap gap-2 text-sm text-[#24342E]">
-              {[
-                "Housekeeping",
-                "Plumbing",
-                "Electrical work",
-                "Cleaning",
-                "Other services",
-              ].map((item) => (
-                <li
-                  key={item}
-                  className="rounded-full border border-[#D0DDED] bg-white/60 px-3 py-1.5"
-                >
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <button
-              type="button"
-              onClick={() => navigate("/services")}
-              className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#6C8FBC] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#5d7ea7]"
-            >
-              Find a Service
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="rounded-[2rem] border border-[#DDE8F6] bg-white p-8">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-[#EAF1FA] px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.18em] text-[#6C8FBC]">
-              <UserRoundPlus className="h-3.5 w-3.5" />
-              Offer support
-            </div>
-
-            <h2 className="text-3xl font-bold tracking-[-0.04em] text-[#24342E]">
-              Provide a service
-            </h2>
-
-            <p className="mt-3 max-w-lg leading-7 text-[#6F7D76]">
-              If you have skills to share, register as a provider and make
-              yourself available for short-term or recurring support in your
-              area.
-            </p>
-
-            <button
-              type="button"
-              onClick={() => navigate("/services/provider")}
-              className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#CFDDEA] bg-[#F4F8FC] px-5 py-3 text-sm font-semibold text-[#6C8FBC] transition hover:bg-[#EBF2FA]"
-            >
-              Provide a Service
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </section>
-
-        {/* How It Works */}
-        <section className="mt-10 rounded-[1.75rem] border border-[#E2E9E4] bg-white p-5 sm:mt-16 sm:rounded-[2rem] sm:p-8 lg:p-10">
-          <div className="text-left sm:text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6F7D76]">
-              How it works
-            </p>
-
-            <h2 className="mt-2 text-2xl font-bold tracking-[-0.04em] text-[#24342E] sm:text-3xl">
-              Simple steps to get connected
-            </h2>
-          </div>
-
-          <div className="mt-6 grid gap-3 sm:mt-8 sm:grid-cols-3 sm:gap-4">
-            {howItWorks.map((step, index) => (
-              <div
-                key={step}
-                className="rounded-2xl border border-[#E2E9E4] bg-[#F8FAF9] p-4 sm:rounded-[1.4rem] sm:p-5"
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE9E0] bg-[#EDF5EF] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#427A65]"
               >
-                <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#E5F1EA] text-sm font-bold text-[#427A65] sm:mb-4 sm:h-10 sm:w-10">
-                  {index + 1}
-                </div>
+                <Sparkles className="h-3.5 w-3.5" />
+                Community Support
+              </motion.div>
 
-                <p className="text-base font-semibold text-[#24342E] sm:text-lg">
-                  {step}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
+              <motion.h1
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.08 }}
+                className="max-w-xl text-3xl font-bold tracking-tight text-[#24342E] sm:text-5xl lg:text-6xl"
+              >
+                Community help,{" "}
+                <span className="text-[#427A65]">connected.</span>
+              </motion.h1>
 
-      {/* Footer */}
-      <footer className="border-t border-[#E2E9E4] bg-white">
-        <div className="mx-auto grid max-w-7xl gap-7 px-4 py-8 sm:px-6 sm:py-10 lg:grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr] lg:px-8">
-          <div>
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
-                <HeartHandshake className="h-5 w-5" />
-              </div>
+              <motion.p
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="mt-4 max-w-lg text-sm text-[#6F7D76] sm:text-base"
+              >
+                Direct peer-to-peer blood donation and neighborhood service connections.
+              </motion.p>
 
-              <span className="text-xl font-bold tracking-[-0.04em] text-[#24342E]">
-                CommunityConnect
-              </span>
-            </div>
-
-            <p className="mt-4 max-w-sm text-sm leading-6 text-[#6F7D76]">
-              A simple, people-first platform for local support, connection,
-              and community care.
-            </p>
-          </div>
-
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6F7D76]">
-              Explore
-            </h3>
-
-            <ul className="mt-4 space-y-3 text-sm text-[#24342E]">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/home")}
-                  className="hover:text-[#427A65]"
-                >
-                  Home
-                </button>
-              </li>
-
-              <li>
+              {/* Fast Action Buttons */}
+              <motion.div
+                initial={{ opacity: 0, y: 14 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.22 }}
+                className="mt-8 flex flex-wrap items-center gap-3"
+              >
                 <button
                   type="button"
                   onClick={() => navigate("/blood")}
-                  className="hover:text-[#427A65]"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#C94C55] px-5 py-3 text-sm font-semibold text-white shadow-xs transition hover:bg-[#B53D46] active:scale-[0.98]"
                 >
+                  <Droplets className="h-4 w-4" />
                   Find Blood
+                  <ArrowRight className="h-4 w-4" />
                 </button>
-              </li>
 
-              <li>
                 <button
                   type="button"
                   onClick={() => navigate("/services")}
-                  className="hover:text-[#427A65]"
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[#D0DFEF] bg-[#EAF1FA] px-5 py-3 text-sm font-semibold text-[#4B78A8] shadow-xs transition hover:bg-[#DEEAF7] active:scale-[0.98]"
                 >
+                  <Wrench className="h-4 w-4" />
                   Find Services
+                  <ArrowRight className="h-4 w-4" />
                 </button>
-              </li>
-            </ul>
+              </motion.div>
+
+              {/* Micro Trust Badges */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mt-8 flex flex-wrap items-center gap-4 text-xs font-medium text-[#7A8881]"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <ShieldCheck className="h-4 w-4 text-[#427A65]" /> Verified Members
+                </span>
+                <span className="text-[#D3DED7]">•</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Clock3 className="h-4 w-4 text-[#427A65]" /> Real-time Matching
+                </span>
+              </motion.div>
+            </div>
+
+            {/* Right: Interactive Central Network Visual */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
+            >
+              <NetworkIllustration />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* =======================================================
+            VISUAL FEATURE TILES (Minimal text, visual first)
+        ======================================================= */}
+        <section className="mt-8 sm:mt-12">
+          <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-xl font-bold tracking-tight text-[#24342E] sm:text-2xl">
+              Quick Actions
+            </h2>
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#6F7D76]">
+              Choose Path
+            </span>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6F7D76]">
-              Account
-            </h3>
+          <div className="grid grid-cols-2 gap-3.5 sm:gap-5 lg:grid-cols-4">
+            {featureBlocks.map((item) => {
+              const isRed = item.accent === "red";
+              const Icon = item.icon;
 
-            <ul className="mt-4 space-y-3 text-sm text-[#24342E]">
-              <li>
-                <button
+              return (
+                <motion.button
+                  key={item.id}
                   type="button"
-                  onClick={() => navigate("/profile")}
-                  className="hover:text-[#427A65]"
+                  onClick={() => navigate(item.route)}
+                  whileHover={{ y: -3 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ duration: 0.2 }}
+                  className={`group relative flex flex-col items-start rounded-3xl border bg-white p-4.5 sm:p-6 text-left transition-all ${
+                    isRed
+                      ? "border-[#F2D5D8] hover:border-[#C94C55]/40"
+                      : "border-[#D8E4F2] hover:border-[#4B78A8]/40"
+                  } ${item.bg}`}
                 >
-                  Profile
-                </button>
-              </li>
+                  {/* Top Badge */}
+                  <div className="flex w-full items-center justify-between">
+                    <div
+                      className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${
+                        isRed
+                          ? "bg-[#FBEAEC] text-[#C94C55]"
+                          : "bg-[#EAF1FA] text-[#4B78A8]"
+                      }`}
+                    >
+                      <Icon className="h-5 w-5" />
+                    </div>
 
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/requests")}
-                  className="hover:text-[#427A65]"
-                >
-                  My Requests
-                </button>
-              </li>
+                    <span
+                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
+                        isRed
+                          ? "bg-[#FBEAEC] text-[#C94C55]"
+                          : "bg-[#EAF1FA] text-[#4B78A8]"
+                      }`}
+                    >
+                      {item.tag}
+                    </span>
+                  </div>
 
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/feedback")}
-                  className="hover:text-[#427A65]"
-                >
-                  Feedback
-                </button>
-              </li>
-            </ul>
+                  {/* Title & Subtitle */}
+                  <div className="mt-5 sm:mt-6">
+                    <h3 className="text-base font-bold text-[#24342E] sm:text-lg">
+                      {item.title}
+                    </h3>
+                    <p className="mt-1 text-xs text-[#6F7D76]">
+                      {item.subtitle}
+                    </p>
+                  </div>
+
+                  {/* Micro action prompt */}
+                  <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-[#24342E] group-hover:text-[#427A65] transition-colors">
+                    <span>Open</span>
+                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                  </div>
+                </motion.button>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* =======================================================
+            VISUAL WORKFLOW (3-step visual diagram)
+        ======================================================= */}
+        <section className="mt-8 rounded-[2rem] border border-[#E2E9E4] bg-white p-6 shadow-xs sm:mt-12 sm:p-8 lg:p-10">
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-[#427A65]">
+                Process
+              </p>
+              <h2 className="mt-1 text-xl font-bold tracking-tight text-[#24342E] sm:text-2xl">
+                How connections work
+              </h2>
+            </div>
+            <span className="text-xs text-[#7B8880]">3 simple steps</span>
           </div>
 
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-[0.18em] text-[#6F7D76]">
-              Connect
-            </h3>
-
-            <ul className="mt-4 space-y-3 text-sm text-[#24342E]">
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/login")}
-                  className="hover:text-[#427A65]"
+          <div className="grid gap-4 sm:grid-cols-3">
+            {steps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.num}
+                  className="relative flex flex-col rounded-2xl border border-[#EAEFEA] bg-[#FAFBFA] p-5 transition hover:border-[#CFDEC9]"
                 >
-                  Login
-                </button>
-              </li>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-mono font-bold text-[#427A65]">
+                      {step.num}
+                    </span>
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white text-[#427A65] shadow-2xs">
+                      <Icon className="h-4.5 w-4.5" />
+                    </div>
+                  </div>
 
-              <li>
-                <button
-                  type="button"
-                  onClick={() => navigate("/register")}
-                  className="hover:text-[#427A65]"
-                >
-                  Create account
-                </button>
-              </li>
-
-              <li className="text-[#6F7D76]">
-                © {new Date().getFullYear()} CommunityConnect
-              </li>
-            </ul>
+                  <h3 className="mt-4 text-base font-bold text-[#24342E]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[#6F7D76]">
+                    {step.caption}
+                  </p>
+                </div>
+              );
+            })}
           </div>
-        </div>
-      </footer>
+        </section>
+      </main>
     </div>
   );
 }
-
-export default Home;

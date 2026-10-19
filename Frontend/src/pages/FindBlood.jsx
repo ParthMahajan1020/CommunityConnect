@@ -1,447 +1,515 @@
 import { useState } from "react";
+import { motion } from "motion/react";
 import {
-    findBloodDonors,
-    sendConnectionRequest,
-} from "../services/api";
+  Droplets,
+  MapPin,
+  ShieldCheck,
+  Send,
+  Loader2,
+  AlertCircle,
+  Phone,
+  Search,
+  HeartHandshake,
+  Activity,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
+import { findBloodDonors, sendConnectionRequest } from "../services/api";
+import {
+  AnimatedBloodDrop,
+  BloodCompatibilityIndicator,
+  ScanningRadar,
+} from "../components/visuals/BloodVisual";
+import { EmptyStateVisual } from "../components/visuals/EmptyStateVisual";
+import { useNavigate } from "react-router-dom";
 
-const bloodGroups = [
-    "A+", "A-", "B+", "B-",
-    "AB+", "AB-", "O+", "O-",
+const bloodGroups = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+const workflowSteps = [
+  {
+    step: "01",
+    title: "Select Group",
+    desc: "Pick required blood group and enter locality",
+    icon: Droplets,
+    badge: "Input",
+    accent: "bg-[#FBEAEC] text-[#C94C55]",
+  },
+  {
+    step: "02",
+    title: "Radar Match",
+    desc: "System scans compatible, verified donors nearby",
+    icon: Search,
+    badge: "Scan",
+    accent: "bg-[#EAF1FA] text-[#4B78A8]",
+  },
+  {
+    step: "03",
+    title: "Direct Connect",
+    desc: "Send connection request & get phone contact",
+    icon: HeartHandshake,
+    badge: "Connect",
+    accent: "bg-[#E5F1EA] text-[#427A65]",
+  },
 ];
 
-function FindBlood() {
-    const [bloodGroup, setBloodGroup] = useState("");
-    const [location, setLocation] = useState("");
-    const [donors, setDonors] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [searched, setSearched] = useState(false);
-    const [error, setError] = useState("");
-    const [requesting, setRequesting] = useState(null);
-    const [requestStatus, setRequestStatus] = useState({});
+export default function FindBlood() {
+  const navigate = useNavigate();
 
-    const handleSearch = async (e) => {
-        e.preventDefault();
+  const [bloodGroup, setBloodGroup] = useState("");
+  const [location, setLocation] = useState("");
+  const [donors, setDonors] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [error, setError] = useState("");
+  const [requesting, setRequesting] = useState(null);
+  const [requestStatus, setRequestStatus] = useState({});
 
-        setError("");
-        setSearched(true);
+  const handleSearch = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSearched(true);
 
-        if (!bloodGroup || !location.trim()) {
-            setError(
-                "Please select a blood group and enter your location."
-            );
-            return;
-        }
+    if (!bloodGroup || !location.trim()) {
+      setError("Select a blood group and enter location.");
+      return;
+    }
 
-        setLoading(true);
-        setDonors([]);
-        setRequestStatus({});
+    setLoading(true);
+    setDonors([]);
+    setRequestStatus({});
 
-        try {
-            const response = await findBloodDonors(
-                bloodGroup,
-                location.trim()
-            );
+    try {
+      const response = await findBloodDonors(bloodGroup, location.trim());
+      setDonors(response.matches || []);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "Search failed. Try again in a moment."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
-            setDonors(response.matches || []);
-        } catch (err) {
-            setError(
-                err.response?.data?.message ||
-                "Unable to find donors right now. Please try again."
-            );
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSendRequest = async (donor) => {
+    let user;
+    try {
+      user = JSON.parse(localStorage.getItem("user"));
+    } catch {
+      user = null;
+    }
 
-    const handleSendRequest = async (donor) => {
-        let user;
+    if (!user) {
+      setRequestStatus((prev) => ({
+        ...prev,
+        [donor._id]: {
+          type: "error",
+          message: "Please log in first.",
+        },
+      }));
+      return;
+    }
 
-        try {
-            user = JSON.parse(localStorage.getItem("user"));
-        } catch {
-            user = null;
-        }
+    const providerId =
+      donor.userId?._id || donor.userId?.id || donor.userId;
 
-        if (!user) {
-            setRequestStatus((prev) => ({
-                ...prev,
-                [donor._id]: {
-                    type: "error",
-                    message: "Please log in before sending a request.",
-                },
-            }));
-            return;
-        }
+    if (!providerId) {
+      setRequestStatus((prev) => ({
+        ...prev,
+        [donor._id]: {
+          type: "error",
+          message: "Incomplete donor profile.",
+        },
+      }));
+      return;
+    }
 
-        const providerId =
-            donor.userId?._id ||
-            donor.userId?.id ||
-            donor.userId;
+    setRequesting(donor._id);
+    setRequestStatus((prev) => ({ ...prev, [donor._id]: null }));
 
-        if (!providerId) {
-            setRequestStatus((prev) => ({
-                ...prev,
-                [donor._id]: {
-                    type: "error",
-                    message: "Donor information is incomplete.",
-                },
-            }));
-            return;
-        }
+    try {
+      await sendConnectionRequest({
+        providerId,
+        type: "BLOOD",
+        description: `Urgent need: ${donor.bloodGroup} in ${location.trim()}.`,
+        location: location.trim(),
+      });
 
-        setRequesting(donor._id);
+      setRequestStatus((prev) => ({
+        ...prev,
+        [donor._id]: {
+          type: "success",
+          message: "Request sent successfully.",
+        },
+      }));
+    } catch (err) {
+      setRequestStatus((prev) => ({
+        ...prev,
+        [donor._id]: {
+          type: "error",
+          message: err.response?.data?.message || "Failed to send request.",
+        },
+      }));
+    } finally {
+      setRequesting(null);
+    }
+  };
 
-        setRequestStatus((prev) => ({
-            ...prev,
-            [donor._id]: null,
-        }));
+  return (
+    <div className="w-full bg-[#F8FAF9] px-4 py-5 sm:px-6 sm:py-7">
+      <div className="mx-auto max-w-5xl space-y-5">
+        {/* Compact Header Hero */}
+        <section className="relative overflow-hidden rounded-3xl border border-[#F2D5D8] bg-gradient-to-br from-white via-[#FCF9FA] to-[#FBEAEC] p-5 shadow-2xs sm:p-6">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-[#F0D5D8] bg-white px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-[#C94C55]">
+                <Droplets className="h-3 w-3" />
+                Blood Network
+              </div>
 
-        try {
-            await sendConnectionRequest({
-                providerId,
-                type: "BLOOD",
-                description: `I need ${donor.bloodGroup} blood in ${location.trim()}.`,
-                location: location.trim(),
-            });
-
-            setRequestStatus((prev) => ({
-                ...prev,
-                [donor._id]: {
-                    type: "success",
-                    message: "Connection request sent successfully.",
-                },
-            }));
-        } catch (err) {
-            setRequestStatus((prev) => ({
-                ...prev,
-                [donor._id]: {
-                    type: "error",
-                    message:
-                        err.response?.data?.message ||
-                        "Failed to send your request.",
-                },
-            }));
-        } finally {
-            setRequesting(null);
-        }
-    };
-
-    return (
-        <main className="min-h-screen bg-[#F8FAF9] px-4 py-8 sm:px-6 sm:py-12">
-            <div className="mx-auto max-w-6xl">
-
-                {/* Hero */}
-                <section className="relative overflow-hidden rounded-[2rem] border border-[#F0DDDF] bg-gradient-to-br from-white via-white to-[#FBEAEC] px-5 py-10 sm:px-10 sm:py-14">
-                    <div className="absolute -right-16 -top-20 h-64 w-64 rounded-full bg-[#C94C55]/5 blur-3xl" />
-
-                    <div className="relative z-10 max-w-2xl">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-[#F0D5D8] bg-white px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.16em] text-[#B83E49]">
-                            <span className="h-2 w-2 rounded-full bg-[#C94C55]" />
-                            Blood donation network
-                        </div>
-
-                        <h1 className="mt-6 text-3xl font-semibold tracking-tight text-[#24342E] sm:text-5xl">
-                            Every connection
-                            <br className="hidden sm:block" /> can save a life.
-                        </h1>
-
-                        <p className="mt-4 max-w-xl text-sm leading-7 text-[#6F7D76] sm:text-base">
-                            Find available blood donors in your area
-                            and connect with people willing to help
-                            when it matters most.
-                        </p>
-
-                        <div className="mt-7 flex flex-wrap gap-3 text-xs font-medium text-[#6F7D76] sm:text-sm">
-                            <span className="rounded-xl border border-[#E8EAE6] bg-white/80 px-4 py-2.5">
-                                Eight blood groups
-                            </span>
-                            <span className="rounded-xl border border-[#E8EAE6] bg-white/80 px-4 py-2.5">
-                                Location-based search
-                            </span>
-                        </div>
-                    </div>
-                </section>
-
-                {/* Search */}
-                <section className="mx-auto mt-7 max-w-4xl rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-sm sm:p-8">
-                    <div>
-                        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#C94C55]">
-                            Find a donor
-                        </p>
-
-                        <h2 className="mt-2 text-xl font-semibold text-[#24342E] sm:text-2xl">
-                            What blood group do you need?
-                        </h2>
-
-                        <p className="mt-2 text-sm leading-6 text-[#6F7D76]">
-                            Select the required group and enter the
-                            area where you need assistance.
-                        </p>
-                    </div>
-
-                    <form onSubmit={handleSearch} className="mt-7">
-                        <label className="mb-3 block text-sm font-medium text-[#34463D]">
-                            Required blood group
-                        </label>
-
-                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-8 sm:gap-3">
-                            {bloodGroups.map((group) => (
-                                <button
-                                    key={group}
-                                    type="button"
-                                    aria-pressed={bloodGroup === group}
-                                    onClick={() => {
-                                        setBloodGroup(group);
-                                        setError("");
-                                    }}
-                                    className={`min-h-12 rounded-xl border text-sm font-semibold transition duration-200 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#FBEAEC] sm:min-h-14 sm:text-base ${
-                                        bloodGroup === group
-                                            ? "border-[#C94C55] bg-[#C94C55] text-white shadow-sm"
-                                            : "border-[#E2E9E4] bg-white text-[#34463D] hover:border-[#D98A91] hover:bg-[#FDF5F5]"
-                                    }`}
-                                >
-                                    {group}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="mt-6">
-                            <label
-                                htmlFor="blood-location"
-                                className="mb-2 block text-sm font-medium text-[#34463D]"
-                            >
-                                Your location
-                            </label>
-
-                            <input
-                                id="blood-location"
-                                type="text"
-                                value={location}
-                                onChange={(e) => {
-                                    setLocation(e.target.value);
-                                    setError("");
-                                }}
-                                placeholder="Enter your city or area"
-                                autoComplete="address-level2"
-                                className="w-full rounded-xl border border-[#E2E9E4] bg-[#FAFBFA] px-4 py-3.5 text-sm text-[#24342E] outline-none transition placeholder:text-[#9AA69F] focus:border-[#C94C55] focus:bg-white focus:ring-4 focus:ring-[#FBEAEC]"
-                            />
-                        </div>
-
-                        {error && (
-                            <div
-                                role="alert"
-                                className="mt-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700"
-                            >
-                                {error}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="mt-5 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#24342E] px-5 py-3.5 text-sm font-semibold text-white transition hover:bg-[#344A40] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#DCE8E0] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto sm:min-w-56"
-                        >
-                            {loading ? (
-                                <>
-                                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                                    Finding donors...
-                                </>
-                            ) : (
-                                "Find available donors"
-                            )}
-                        </button>
-                    </form>
-                </section>
-
-                {/* Results */}
-                {searched && (
-                    <section className="mt-10 sm:mt-14">
-                        <div className="mb-6 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                            <div>
-                                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#C94C55]">
-                                    Search results
-                                </p>
-
-                                <h2 className="mt-2 text-2xl font-semibold tracking-tight text-[#24342E] sm:text-3xl">
-                                    Available donors
-                                </h2>
-                            </div>
-
-                            {!loading && (
-                                <p className="text-sm text-[#6F7D76]">
-                                    {donors.length}{" "}
-                                    {donors.length === 1 ? "donor" : "donors"} found
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Loading skeleton */}
-                        {loading && (
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                {[1, 2, 3].map((item) => (
-                                    <div
-                                        key={item}
-                                        className="animate-pulse rounded-2xl border border-[#E2E9E4] bg-white p-6"
-                                    >
-                                        <div className="flex justify-between">
-                                            <div className="space-y-3">
-                                                <div className="h-3 w-20 rounded bg-gray-200" />
-                                                <div className="h-9 w-16 rounded bg-gray-200" />
-                                            </div>
-                                            <div className="h-12 w-12 rounded-2xl bg-gray-200" />
-                                        </div>
-
-                                        <div className="mt-8 space-y-4">
-                                            <div className="h-4 w-3/4 rounded bg-gray-200" />
-                                            <div className="h-4 w-1/2 rounded bg-gray-200" />
-                                            <div className="h-4 w-2/3 rounded bg-gray-200" />
-                                        </div>
-
-                                        <div className="mt-7 h-11 rounded-xl bg-gray-200" />
-                                    </div>
-                                ))}
-                            </div>
-                        )}
-
-                        {/* Empty state */}
-                        {!loading && donors.length === 0 && !error && (
-                            <div className="rounded-3xl border border-[#E2E9E4] bg-white px-5 py-12 text-center sm:px-10">
-                                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FBEAEC] text-2xl font-semibold text-[#C94C55]">
-                                    +
-                                </div>
-
-                                <h3 className="mt-5 text-xl font-semibold text-[#24342E]">
-                                    No donors found
-                                </h3>
-
-                                <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#6F7D76]">
-                                    We couldn't find matching donors for
-                                    this search. Try another location or
-                                    search again later.
-                                </p>
-                            </div>
-                        )}
-
-                        {/* Donor cards */}
-                        {!loading && donors.length > 0 && (
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                                {donors.map((donor) => {
-                                    const status = requestStatus[donor._id];
-
-                                    return (
-                                        <article
-                                            key={donor._id}
-                                            className="flex flex-col rounded-2xl border border-[#E2E9E4] bg-white p-5 transition duration-200 hover:-translate-y-0.5 hover:border-[#E7C7CA] hover:shadow-lg hover:shadow-[#24342E]/5 sm:p-6"
-                                        >
-                                            <div className="flex items-start justify-between">
-                                                <div>
-                                                    <p className="text-xs font-medium uppercase tracking-[0.14em] text-[#8A9690]">
-                                                        Blood group
-                                                    </p>
-
-                                                    <h3 className="mt-2 text-4xl font-semibold tracking-tight text-[#C94C55]">
-                                                        {donor.bloodGroup}
-                                                    </h3>
-                                                </div>
-
-                                                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FBEAEC] text-2xl font-semibold text-[#C94C55]">
-                                                    +
-                                                </div>
-                                            </div>
-
-                                            <div className="mt-5">
-                                                <span
-                                                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs font-medium ${
-                                                        donor.availability
-                                                            ? "bg-[#E5F1EA] text-[#427A65]"
-                                                            : "bg-gray-100 text-gray-500"
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className={`h-1.5 w-1.5 rounded-full ${
-                                                            donor.availability
-                                                                ? "bg-[#427A65]"
-                                                                : "bg-gray-400"
-                                                        }`}
-                                                    />
-                                                    {donor.availability
-                                                        ? "Available"
-                                                        : "Unavailable"}
-                                                </span>
-                                            </div>
-
-                                            <div className="mt-6 flex-1 space-y-4">
-                                                <div>
-                                                    <p className="text-xs text-[#8A9690]">
-                                                        Donor
-                                                    </p>
-                                                    <p className="mt-1 break-words text-sm font-medium text-[#24342E]">
-                                                        {donor.userId?.name ||
-                                                            "Community Donor"}
-                                                    </p>
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-xs text-[#8A9690]">
-                                                        Location
-                                                    </p>
-                                                    <p className="mt-1 break-words text-sm font-medium text-[#24342E]">
-                                                        {donor.location || "Not provided"}
-                                                    </p>
-                                                </div>
-
-                                                <div>
-                                                    <p className="text-xs text-[#8A9690]">
-                                                        Contact
-                                                    </p>
-                                                    <p className="mt-1 break-words text-sm font-medium text-[#24342E]">
-                                                        {donor.contact ||
-                                                            donor.userId?.phone ||
-                                                            "Not available"}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            {status && (
-                                                <div
-                                                    role="status"
-                                                    className={`mt-5 rounded-xl border px-3 py-3 text-sm ${
-                                                        status.type === "success"
-                                                            ? "border-[#D7E9DD] bg-[#F0F7F2] text-[#427A65]"
-                                                            : "border-red-100 bg-red-50 text-red-700"
-                                                    }`}
-                                                >
-                                                    {status.message}
-                                                </div>
-                                            )}
-
-                                            <button
-                                                type="button"
-                                                onClick={() =>
-                                                    handleSendRequest(donor)
-                                                }
-                                                disabled={
-                                                    requesting === donor._id ||
-                                                    !donor.availability
-                                                }
-                                                className="mt-6 flex min-h-11 w-full items-center justify-center rounded-xl bg-[#C94C55] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#B83E49] disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
-                                                {requesting === donor._id
-                                                    ? "Sending request..."
-                                                    : donor.availability
-                                                      ? "Send connection request"
-                                                      : "Currently unavailable"}
-                                            </button>
-                                        </article>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </section>
-                )}
+              <h1 className="text-2xl font-bold tracking-tight text-[#24342E] sm:text-3xl">
+                Find Blood Donors
+              </h1>
+              <p className="mt-1 text-xs text-[#6F7D76]">
+                Instant matching with verified local community donors.
+              </p>
             </div>
-        </main>
-    );
-}
 
-export default FindBlood;
+            <div className="hidden sm:block shrink-0">
+              <AnimatedBloodDrop size="md" pulse />
+            </div>
+          </div>
+        </section>
+
+        {/* Compact Search Card */}
+        <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs sm:p-6">
+          <form onSubmit={handleSearch}>
+            {/* Blood Group Chips */}
+            <div>
+              <div className="mb-2 flex items-center justify-between">
+                <label className="text-[11px] font-semibold uppercase tracking-wider text-[#6F7D76]">
+                  Select Blood Group
+                </label>
+                <span className="text-[11px] text-[#8C9892]">
+                  {bloodGroup ? `Selected: ${bloodGroup}` : "Required"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+                {bloodGroups.map((group) => {
+                  const isSelected = bloodGroup === group;
+                  return (
+                    <button
+                      key={group}
+                      type="button"
+                      aria-pressed={isSelected}
+                      onClick={() => {
+                        setBloodGroup(group);
+                        setError("");
+                      }}
+                      className={`flex h-11 flex-col items-center justify-center rounded-2xl border text-xs font-bold transition-all duration-150 active:scale-95 ${
+                        isSelected
+                          ? "border-[#C94C55] bg-[#C94C55] text-white shadow-xs"
+                          : "border-[#E2E9E4] bg-[#FBFCFB] text-[#24342E] hover:border-[#F0D5D8] hover:bg-[#FFF8F9]"
+                      }`}
+                    >
+                      <span>{group}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Blood Compatibility Guide */}
+            {bloodGroup && (
+              <div className="mt-3.5">
+                <BloodCompatibilityIndicator selectedGroup={bloodGroup} />
+              </div>
+            )}
+
+            {/* Location + Submit row */}
+            <div className="mt-4 grid gap-2.5 sm:grid-cols-[1fr_auto]">
+              <div className="relative">
+                <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B9891]" />
+                <input
+                  id="blood-location"
+                  type="text"
+                  value={location}
+                  onChange={(e) => {
+                    setLocation(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="Enter neighborhood, locality or city..."
+                  className="h-11 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs text-[#24342E] outline-none transition focus:border-[#C94C55] focus:bg-white focus:ring-2 focus:ring-[#C94C55]/10"
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#C94C55] px-5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#B53D46] disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    Find Donors
+                    <Send className="h-3.5 w-3.5" />
+                  </>
+                )}
+              </button>
+            </div>
+
+            {error && (
+              <div
+                role="alert"
+                className="mt-3.5 flex items-center gap-2 rounded-xl border border-[#F2D5D8] bg-[#FBEAEC] px-3.5 py-2.5 text-xs font-medium text-[#C94C55]"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+          </form>
+        </section>
+
+        {/* RESULTS OR VISUAL INITIAL WORKFLOW */}
+        {searched ? (
+          <section className="pt-1">
+            {loading ? (
+              <ScanningRadar label="Scanning for matching blood donors nearby..." />
+            ) : donors.length === 0 && !error ? (
+              <div className="rounded-3xl border border-[#E2E9E4] bg-white p-6 shadow-2xs sm:p-8">
+                <EmptyStateVisual
+                  type="blood"
+                  title="No registered donors found in this locality"
+                  actionLabel="Register as a donor"
+                  onAction={() => navigate("/blood/donor")}
+                />
+              </div>
+            ) : (
+              <div>
+                <div className="mb-3.5 flex items-center justify-between">
+                  <h2 className="text-sm font-bold text-[#24342E]">
+                    Available Donors ({donors.length})
+                  </h2>
+                  <span className="text-[11px] text-[#6F7D76]">Local & Verified</span>
+                </div>
+
+                <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
+                  {donors.map((donor) => {
+                    const status = requestStatus[donor._id];
+                    const isAvailable = donor.availability;
+
+                    return (
+                      <motion.article
+                        key={donor._id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="group flex flex-col justify-between rounded-3xl border border-[#E2E9E4] bg-white p-4.5 shadow-2xs transition hover:border-[#F0D5D8] hover:shadow-xs"
+                      >
+                        {/* Top Group & Badge */}
+                        <div>
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-2.5">
+                              <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#FBEAEC] text-base font-bold text-[#C94C55]">
+                                {donor.bloodGroup}
+                              </span>
+                              <div>
+                                <h3 className="text-xs font-semibold text-[#24342E]">
+                                  {donor.userId?.name || "Community Donor"}
+                                </h3>
+                                <div className="mt-0.5 flex items-center gap-1.5">
+                                  <span
+                                    className={`h-1.5 w-1.5 rounded-full ${
+                                      isAvailable ? "bg-[#427A65]" : "bg-gray-300"
+                                    }`}
+                                  />
+                                  <span className="text-[10px] font-medium text-[#6F7D76]">
+                                    {isAvailable ? "Available" : "Unavailable"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <span className="inline-flex items-center gap-1 rounded-full bg-[#E5F1EA] px-2 py-0.5 text-[10px] font-semibold text-[#427A65]">
+                              <ShieldCheck className="h-3 w-3" />
+                              Verified
+                            </span>
+                          </div>
+
+                          {/* Info chips */}
+                          <div className="mt-3 space-y-1 border-t border-[#EEF2EF] pt-2.5 text-xs text-[#6F7D76]">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-3.5 w-3.5 shrink-0 text-[#8C9993]" />
+                              <span className="truncate">{donor.location || "Location not set"}</span>
+                            </div>
+                            {(donor.contact || donor.userId?.phone) && (
+                              <div className="flex items-center gap-2">
+                                <Phone className="h-3.5 w-3.5 shrink-0 text-[#8C9993]" />
+                                <span className="truncate">{donor.contact || donor.userId?.phone}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Status Message or Request CTA */}
+                        <div className="mt-4">
+                          {status && (
+                            <div
+                              className={`mb-2.5 rounded-xl px-3 py-2 text-xs font-medium ${
+                                status.type === "success"
+                                  ? "border border-[#D4E7D9] bg-[#EDF7EF] text-[#356651]"
+                                  : "border border-[#F0D1D5] bg-[#FBEAEC] text-[#A63843]"
+                              }`}
+                            >
+                              {status.message}
+                            </div>
+                          )}
+
+                          <button
+                            type="button"
+                            onClick={() => handleSendRequest(donor)}
+                            disabled={requesting === donor._id || !isAvailable}
+                            className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-[#24342E] px-4 text-xs font-semibold text-white transition hover:bg-[#34463D] disabled:cursor-not-allowed disabled:opacity-50"
+                          >
+                            {requesting === donor._id ? (
+                              <>
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                Sending...
+                              </>
+                            ) : !isAvailable ? (
+                              "Unavailable"
+                            ) : (
+                              <>
+                                Send Request
+                                <Send className="h-3.5 w-3.5" />
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </motion.article>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </section>
+        ) : (
+          /* =======================================================
+             VISUAL CONTENT WHEN NO SEARCH PERFORMED YET (Prevents Empty Page)
+             ======================================================= */
+          <div className="space-y-5">
+            {/* 3-Step Visual Process: How Matching Works */}
+            <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs sm:p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#C94C55]">
+                    Process
+                  </span>
+                  <h2 className="text-sm font-bold text-[#24342E]">
+                    How matching works
+                  </h2>
+                </div>
+                <span className="text-[11px] text-[#8C9892]">3 simple steps</span>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                {workflowSteps.map((step) => {
+                  const Icon = step.icon;
+                  return (
+                    <div
+                      key={step.step}
+                      className="group relative flex flex-col justify-between rounded-2xl border border-[#EEF2EF] bg-[#FBFCFB] p-4 transition hover:border-[#F2D5D8] hover:bg-white"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-[11px] font-mono font-bold text-[#8C9892]">
+                            {step.step}
+                          </span>
+                          <span
+                            className={`flex h-8 w-8 items-center justify-center rounded-xl transition group-hover:scale-105 ${step.accent}`}
+                          >
+                            <Icon className="h-4 w-4" />
+                          </span>
+                        </div>
+
+                        <h3 className="mt-3 text-xs font-bold text-[#24342E]">
+                          {step.title}
+                        </h3>
+                        <p className="mt-1 text-[11px] text-[#6F7D76]">
+                          {step.desc}
+                        </p>
+                      </div>
+
+                      <div className="mt-3 flex items-center gap-1 text-[10px] font-semibold text-[#8C9892]">
+                        <CheckCircle2 className="h-3 w-3 text-[#427A65]" />
+                        <span>Verified Community Step</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
+
+            {/* Quick Emergency Reference Cards */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              {/* Universal Donor Card */}
+              <div className="flex items-center justify-between rounded-3xl border border-[#F2D5D8] bg-gradient-to-r from-white to-[#FFF5F6] p-4.5 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#C94C55] text-sm font-bold text-white shadow-2xs">
+                    O-
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-[#24342E]">
+                      Universal Red Cell Donor
+                    </h3>
+                    <p className="text-[11px] text-[#6F7D76]">
+                      Can donate red blood cells to any recipient
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBloodGroup("O-");
+                    setError("");
+                  }}
+                  className="rounded-xl border border-[#F0D5D8] bg-white px-3 py-1.5 text-[11px] font-semibold text-[#C94C55] transition hover:bg-[#FBEAEC]"
+                >
+                  Select O-
+                </button>
+              </div>
+
+              {/* Become Donor Prompt Card */}
+              <div className="flex items-center justify-between rounded-3xl border border-[#D5E7DB] bg-gradient-to-r from-white to-[#F2F8F4] p-4.5 shadow-2xs">
+                <div className="flex items-center gap-3">
+                  <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#427A65] text-white shadow-2xs">
+                    <Activity className="h-5 w-5" />
+                  </span>
+                  <div>
+                    <h3 className="text-xs font-bold text-[#24342E]">
+                      Are you healthy to donate?
+                    </h3>
+                    <p className="text-[11px] text-[#6F7D76]">
+                      Join the neighborhood donor registry
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/blood/donor")}
+                  className="inline-flex items-center gap-1 rounded-xl bg-[#427A65] px-3 py-1.5 text-[11px] font-semibold text-white transition hover:bg-[#356651]"
+                >
+                  Join
+                  <ArrowRight className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
