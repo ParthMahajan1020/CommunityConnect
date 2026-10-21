@@ -50,19 +50,31 @@ export default function Navbar() {
         setProfileOpen(false);
       }
     };
+
     document.addEventListener("keydown", handleEscape);
+
     return () => document.removeEventListener("keydown", handleEscape);
   }, []);
 
   useEffect(() => {
     if (!mobileOpen) return;
+
     const previouslyFocused = document.activeElement;
-    mobileDialogRef.current?.querySelector("button, a[href]")?.focus();
+
+    mobileDialogRef.current
+      ?.querySelector("button, a[href]")
+      ?.focus();
+
     const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     return () => {
       document.body.style.overflow = originalOverflow;
-      if (previouslyFocused instanceof HTMLElement && previouslyFocused.isConnected) {
+
+      if (
+        previouslyFocused instanceof HTMLElement &&
+        previouslyFocused.isConnected
+      ) {
         previouslyFocused.focus();
       }
     };
@@ -74,8 +86,11 @@ export default function Navbar() {
         setMobileOpen(false);
       }
     };
+
     window.addEventListener("resize", closeMenuAtDesktopWidth);
-    return () => window.removeEventListener("resize", closeMenuAtDesktopWidth);
+
+    return () =>
+      window.removeEventListener("resize", closeMenuAtDesktopWidth);
   }, []);
 
   const handleLogout = () => {
@@ -103,70 +118,138 @@ export default function Navbar() {
   return (
     <>
       <header className="sticky top-0 z-50 border-b border-[#E2E9E4] bg-white/85 backdrop-blur-md transition-all">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 sm:px-6 lg:px-8">
-          {/* Brand */}
+        {/* =========================================================
+            DESKTOP / MAIN NAVBAR
+        ========================================================= */}
+        <div className="mx-auto flex h-[68px] w-full max-w-[1600px] items-center gap-3 px-4 py-2.5 sm:px-6 lg:px-8">
+          
+          {/* =====================================================
+              BRAND
+          ===================================================== */}
           <button
             type="button"
             onClick={() => {
               handleNavClick();
               navigate("/home");
             }}
-            className="group flex min-w-0 items-center gap-2.5 rounded-full p-1 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#427A65]"
+            className="
+              group flex shrink-0 items-center gap-2.5
+              rounded-full p-1
+              transition
+              focus-visible:outline-none
+              focus-visible:ring-2
+              focus-visible:ring-[#427A65]
+            "
             aria-label="Go to home"
           >
-            <div className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65] shadow-xs transition-transform group-hover:scale-105">
+            <div
+              className="
+                flex h-9 w-9 shrink-0
+                items-center justify-center
+                rounded-xl
+                bg-[#E5F1EA]
+                text-[#427A65]
+                shadow-xs
+                transition-transform
+                group-hover:scale-105
+                sm:h-10 sm:w-10
+              "
+            >
               <HeartHandshake className="h-5 w-5" />
             </div>
 
-            <div className="flex flex-col text-left leading-tight">
-              <span className="text-sm font-bold tracking-tight text-[#24342E] sm:text-base">
+            <div className="flex shrink-0 flex-col text-left leading-tight">
+              <span className="whitespace-nowrap text-sm font-bold tracking-tight text-[#24342E] sm:text-base">
                 CommunityConnect
               </span>
-              <span className="text-[10px] font-medium tracking-wider text-[#6F7D76] uppercase">
+
+              <span className="whitespace-nowrap text-[10px] font-medium uppercase tracking-wider text-[#6F7D76]">
                 Peer Network
               </span>
             </div>
           </button>
 
-          {/* Desktop Navigation */}
+          {/* =====================================================
+              DESKTOP NAVIGATION
+          ===================================================== */}
           <nav
-            className="hidden items-center gap-1 rounded-full border border-[#E2E9E4] bg-[#F8FAF9]/80 p-1 lg:flex"
+            className="
+              hidden min-w-0 flex-1
+              lg:block
+            "
             aria-label="Main navigation"
           >
-            {navItems.map(({ label, to, icon: Icon }) => {
-              const isActive = location.pathname === to;
-              return (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end
-                  className={`relative flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200 xl:px-3.5 xl:text-sm ${
-                    isActive
-                      ? "bg-[#427A65] text-white shadow-xs"
-                      : "text-[#24342E] hover:bg-white hover:text-[#427A65]"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" />
-                  {label}
-                </NavLink>
-              );
-            })}
+            <div
+              className="
+                mx-auto flex w-fit max-w-full
+                items-center gap-1
+                overflow-x-auto
+                rounded-full
+                border border-[#E2E9E4]
+                bg-[#F8FAF9]/80
+                p-1
+                scrollbar-none
+              "
+            >
+              {navItems.map(({ label, to, icon: Icon }) => {
+                const isActive = location.pathname === to;
+
+                return (
+                  <NavLink
+                    key={to}
+                    to={to}
+                    end
+                    className={`
+                      relative flex shrink-0
+                      items-center gap-1.5
+                      whitespace-nowrap
+                      rounded-full
+                      px-3 py-1.5
+                      text-xs font-medium
+                      transition-all duration-200
+                      xl:px-3.5 xl:text-sm
+                      ${
+                        isActive
+                          ? "bg-[#427A65] text-white shadow-xs"
+                          : "text-[#24342E] hover:bg-white hover:text-[#427A65]"
+                      }
+                    `}
+                  >
+                    <Icon className="h-3.5 w-3.5 shrink-0" />
+                    {label}
+                  </NavLink>
+                );
+              })}
+            </div>
           </nav>
 
-          {/* Desktop Account Actions */}
-          <div className="hidden items-center gap-2 lg:flex">
+          {/* =====================================================
+              DESKTOP ACCOUNT ACTIONS
+          ===================================================== */}
+          <div className="hidden shrink-0 items-center gap-2 lg:flex">
             {user ? (
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setProfileOpen((prev) => !prev)}
-                  className="flex items-center gap-2 rounded-full border border-[#E2E9E4] bg-white px-2.5 py-1.5 pr-3 shadow-xs transition hover:border-[#C9D8CF] hover:bg-[#F8FAF9]"
+                  className="
+                    flex shrink-0 items-center gap-2
+                    rounded-full
+                    border border-[#E2E9E4]
+                    bg-white
+                    px-2.5 py-1.5 pr-3
+                    shadow-xs
+                    transition
+                    hover:border-[#C9D8CF]
+                    hover:bg-[#F8FAF9]
+                  "
                   aria-expanded={profileOpen}
                   aria-haspopup="true"
                   aria-label="Open account menu"
                 >
-                  <span className="relative flex h-7 w-7 items-center justify-center rounded-full bg-[#E5F1EA] text-xs font-bold text-[#427A65]">
+                  <span className="relative flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#E5F1EA] text-xs font-bold text-[#427A65]">
                     {initials}
+
                     <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full border-2 border-white bg-[#427A65]" />
                   </span>
 
@@ -175,7 +258,7 @@ export default function Navbar() {
                   </span>
 
                   <ChevronDown
-                    className={`h-3.5 w-3.5 text-[#6F7D76] transition-transform ${
+                    className={`h-3.5 w-3.5 shrink-0 text-[#6F7D76] transition-transform ${
                       profileOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -196,12 +279,19 @@ export default function Navbar() {
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: 8, scale: 0.98 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 z-50 mt-2 w-56 rounded-2xl border border-[#E2E9E4] bg-white p-1.5 shadow-[0_16px_32px_rgba(36,52,46,0.1)]"
+                        className="
+                          absolute right-0 z-50 mt-2 w-56
+                          rounded-2xl
+                          border border-[#E2E9E4]
+                          bg-white p-1.5
+                          shadow-[0_16px_32px_rgba(36,52,46,0.1)]
+                        "
                       >
                         <div className="border-b border-[#E2E9E4] px-3 py-2.5">
                           <p className="truncate text-xs font-semibold text-[#24342E]">
                             {user.name || "Account"}
                           </p>
+
                           {user.email && (
                             <p className="truncate text-[11px] text-[#6F7D76]">
                               {user.email}
@@ -216,7 +306,15 @@ export default function Navbar() {
                               setProfileOpen(false);
                               navigate("/profile");
                             }}
-                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-medium text-[#24342E] transition hover:bg-[#F4F8F6]"
+                            className="
+                              flex w-full items-center gap-2.5
+                              rounded-xl
+                              px-3 py-2
+                              text-left text-xs font-medium
+                              text-[#24342E]
+                              transition
+                              hover:bg-[#F4F8F6]
+                            "
                           >
                             <User className="h-3.5 w-3.5 text-[#6F7D76]" />
                             Profile
@@ -228,18 +326,34 @@ export default function Navbar() {
                               setProfileOpen(false);
                               navigate("/requests");
                             }}
-                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-medium text-[#24342E] transition hover:bg-[#F4F8F6]"
+                            className="
+                              flex w-full items-center gap-2.5
+                              rounded-xl
+                              px-3 py-2
+                              text-left text-xs font-medium
+                              text-[#24342E]
+                              transition
+                              hover:bg-[#F4F8F6]
+                            "
                           >
                             <Sparkles className="h-3.5 w-3.5 text-[#6F7D76]" />
                             My Requests
                           </button>
                         </div>
 
-                        <div className="border-t border-[#E2E9E4] pt-1">
+                        <div className="space-y-1 border-t border-[#E2E9E4] pt-1">
                           <button
                             type="button"
                             onClick={handleLogout}
-                            className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-xs font-medium text-[#C94C55] transition hover:bg-[#FBEAEC]"
+                            className="
+                              flex w-full items-center gap-2.5
+                              rounded-xl
+                              px-3 py-2
+                              text-left text-xs font-medium
+                              text-[#C94C55]
+                              transition
+                              hover:bg-[#FBEAEC]
+                            "
                           >
                             <LogOut className="h-3.5 w-3.5" />
                             Logout
@@ -251,11 +365,18 @@ export default function Navbar() {
                 </AnimatePresence>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex shrink-0 items-center gap-2">
                 <button
                   type="button"
                   onClick={() => navigate("/login")}
-                  className="rounded-full px-3.5 py-1.5 text-xs font-semibold text-[#24342E] transition hover:bg-[#F4F8F6]"
+                  className="
+                    rounded-full
+                    px-3.5 py-1.5
+                    text-xs font-semibold
+                    text-[#24342E]
+                    transition
+                    hover:bg-[#F4F8F6]
+                  "
                 >
                   Log In
                 </button>
@@ -263,7 +384,16 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={() => navigate("/register")}
-                  className="rounded-full bg-[#427A65] px-4 py-1.5 text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651]"
+                  className="
+                    rounded-full
+                    bg-[#427A65]
+                    px-4 py-1.5
+                    text-xs font-semibold
+                    text-white
+                    shadow-xs
+                    transition
+                    hover:bg-[#356651]
+                  "
                 >
                   Get Started
                 </button>
@@ -271,36 +401,72 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Toggle */}
+          {/* =====================================================
+              MOBILE MENU TOGGLE
+          ===================================================== */}
           <button
             type="button"
             onClick={() => setMobileOpen((prev) => !prev)}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-[#E2E9E4] bg-white text-[#24342E] transition hover:bg-[#F4F8F6] lg:hidden"
+            className="
+              inline-flex h-9 w-9 shrink-0
+              items-center justify-center
+              rounded-xl
+              border border-[#E2E9E4]
+              bg-white
+              text-[#24342E]
+              transition
+              hover:bg-[#F4F8F6]
+              lg:hidden
+            "
             aria-label={mobileOpen ? "Close menu" : "Open menu"}
             aria-expanded={mobileOpen}
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </header>
 
-      {/* Mobile Drawer */}
+      {/* =========================================================
+          MOBILE DRAWER
+      ========================================================= */}
       {mobileOpen &&
         createPortal(
           <div
-            className="fixed inset-0 z-[100] bg-[#24342E]/30 backdrop-blur-xs lg:hidden"
+            className="
+              fixed inset-0 z-[100]
+              bg-[#24342E]/30
+              backdrop-blur-xs
+              lg:hidden
+            "
             onClick={() => setMobileOpen(false)}
           >
             <motion.section
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 280 }}
+              transition={{
+                type: "spring",
+                damping: 25,
+                stiffness: 280,
+              }}
               ref={mobileDialogRef}
               role="dialog"
               aria-modal="true"
               aria-label="Mobile navigation"
-              className="absolute right-0 top-0 flex h-full w-[min(85vw,22rem)] flex-col border-l border-[#E2E9E4] bg-white p-5 shadow-2xl"
+              className="
+                absolute right-0 top-0
+                flex h-full
+                w-[min(85vw,22rem)]
+                flex-col
+                border-l border-[#E2E9E4]
+                bg-white
+                p-5
+                shadow-2xl
+              "
               onClick={(event) => event.stopPropagation()}
             >
               {/* Drawer Header */}
@@ -309,10 +475,12 @@ export default function Navbar() {
                   <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
                     <HeartHandshake className="h-5 w-5" />
                   </div>
+
                   <div>
                     <p className="text-sm font-bold tracking-tight text-[#24342E]">
                       CommunityConnect
                     </p>
+
                     <p className="text-[10px] uppercase tracking-wider text-[#6F7D76]">
                       Peer Network
                     </p>
@@ -335,10 +503,12 @@ export default function Navbar() {
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#E5F1EA] text-xs font-bold text-[#427A65]">
                     {initials}
                   </div>
+
                   <div className="min-w-0">
                     <p className="truncate text-xs font-semibold text-[#24342E]">
                       {user.name || "Account"}
                     </p>
+
                     <p className="truncate text-[11px] text-[#6F7D76]">
                       {user.email || "Community Member"}
                     </p>
@@ -347,7 +517,10 @@ export default function Navbar() {
               )}
 
               {/* Navigation list */}
-              <nav className="mt-5 space-y-1 overflow-y-auto" aria-label="Mobile navigation links">
+              <nav
+                className="mt-5 space-y-1 overflow-y-auto"
+                aria-label="Mobile navigation links"
+              >
                 {navItems.map(({ label, to, icon: Icon }) => (
                   <NavLink
                     key={to}
@@ -357,7 +530,7 @@ export default function Navbar() {
                     className={({ isActive }) =>
                       `flex items-center gap-3 rounded-xl px-3.5 py-3 text-xs font-medium transition-colors ${
                         isActive
-                          ? "bg-[#E5F1EA] text-[#427A65] font-semibold"
+                          ? "bg-[#E5F1EA] font-semibold text-[#427A65]"
                           : "text-[#24342E] hover:bg-[#F4F8F6]"
                       }`
                     }
@@ -369,7 +542,7 @@ export default function Navbar() {
               </nav>
 
               {/* Bottom Actions */}
-              <div className="mt-auto border-t border-[#E2E9E4] pt-4 space-y-2">
+              <div className="mt-auto space-y-2 border-t border-[#E2E9E4] pt-4">
                 {user ? (
                   <>
                     <button
@@ -378,15 +551,36 @@ export default function Navbar() {
                         handleNavClick();
                         navigate("/profile");
                       }}
-                      className="flex w-full items-center justify-between rounded-xl bg-[#F4F8F6] px-3.5 py-2.5 text-xs font-semibold text-[#24342E] transition hover:bg-[#E5F1EA]"
+                      className="
+                        flex w-full items-center
+                        justify-between
+                        rounded-xl
+                        bg-[#F4F8F6]
+                        px-3.5 py-2.5
+                        text-xs font-semibold
+                        text-[#24342E]
+                        transition
+                        hover:bg-[#E5F1EA]
+                      "
                     >
                       <span>Profile</span>
                       <User className="h-4 w-4" />
                     </button>
+
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex w-full items-center justify-between rounded-xl bg-[#FBEAEC] px-3.5 py-2.5 text-xs font-semibold text-[#C94C55] transition hover:bg-[#F8DDE0]"
+                      className="
+                        flex w-full items-center
+                        justify-between
+                        rounded-xl
+                        bg-[#FBEAEC]
+                        px-3.5 py-2.5
+                        text-xs font-semibold
+                        text-[#C94C55]
+                        transition
+                        hover:bg-[#F8DDE0]
+                      "
                     >
                       <span>Logout</span>
                       <LogOut className="h-4 w-4" />
@@ -400,17 +594,34 @@ export default function Navbar() {
                         handleNavClick();
                         navigate("/login");
                       }}
-                      className="flex items-center justify-center rounded-xl bg-[#F4F8F6] py-2.5 text-xs font-semibold text-[#24342E]"
+                      className="
+                        flex items-center
+                        justify-center
+                        rounded-xl
+                        bg-[#F4F8F6]
+                        py-2.5
+                        text-xs font-semibold
+                        text-[#24342E]
+                      "
                     >
                       Log In
                     </button>
+
                     <button
                       type="button"
                       onClick={() => {
                         handleNavClick();
                         navigate("/register");
                       }}
-                      className="flex items-center justify-center rounded-xl bg-[#427A65] py-2.5 text-xs font-semibold text-white"
+                      className="
+                        flex items-center
+                        justify-center
+                        rounded-xl
+                        bg-[#427A65]
+                        py-2.5
+                        text-xs font-semibold
+                        text-white
+                      "
                     >
                       Sign Up
                     </button>
