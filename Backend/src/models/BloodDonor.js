@@ -28,6 +28,22 @@ const bloodDonorSchema = new mongoose.Schema(
         contact: {
             type: String,
             required: true
+        },
+
+        reportDocument: {
+            type: String,
+            default: ""
+        },
+
+        hasReportLater: {
+            type: Boolean,
+            default: false
+        },
+
+        verificationStatus: {
+            type: String,
+            enum: ["UNVERIFIED", "VERIFIED"],
+            default: "UNVERIFIED"
         }
     },
     {
@@ -36,5 +52,6 @@ const bloodDonorSchema = new mongoose.Schema(
 );
 
 bloodDonorSchema.index({ bloodGroup: 1, location: 1, availability: 1 });
+bloodDonorSchema.index({ userId: 1 });
 
 module.exports = mongoose.model("BloodDonor", bloodDonorSchema);

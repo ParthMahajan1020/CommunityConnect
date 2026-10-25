@@ -6,25 +6,33 @@ const {
     verifyEmailOTP,
     resendEmailOTP,
     forgotPassword,
-    resetPassword
+    resetPassword,
+    registerPrivate,
+    loginPrivate,
+    loginAdmin
 } = require('../controllers/authController');
 
 const router = express.Router();
 
-// Registration
+// ============================================
+// PUBLIC PORTAL AUTH ROUTES
+// ============================================
 router.post('/register', registerUser);
-
-// Email verification
+router.post('/login', loginUser);
 router.post('/verify-email-otp', verifyEmailOTP);
 router.post('/resend-email-otp', resendEmailOTP);
-
-// Login
-router.post('/login', loginUser);
-
-// Forgot password
 router.post('/forgot-password', forgotPassword);
-
-// Reset password
 router.post('/reset-password', resetPassword);
+
+// ============================================
+// PRIVATE PORTAL AUTH ROUTES
+// ============================================
+router.post('/private/register', registerPrivate);
+router.post('/private/login', loginPrivate);
+
+// ============================================
+// ADMIN PORTAL AUTH ROUTES (NO PUBLIC REGISTER!)
+// ============================================
+router.post('/admin/login', loginAdmin);
 
 module.exports = router;

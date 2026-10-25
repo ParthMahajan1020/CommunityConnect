@@ -13,6 +13,7 @@ import {
   Activity,
   ArrowRight,
   CheckCircle2,
+  Building2
 } from "lucide-react";
 import { findBloodDonors, sendConnectionRequest } from "../services/api";
 import {
@@ -37,7 +38,7 @@ const workflowSteps = [
   {
     step: "02",
     title: "Radar Match",
-    desc: "System scans compatible, verified donors nearby",
+    desc: "System scans compatible donors and accredited blood banks",
     icon: Search,
     badge: "Scan",
     accent: "bg-[#EAF1FA] text-[#4B78A8]",
@@ -45,7 +46,7 @@ const workflowSteps = [
   {
     step: "03",
     title: "Direct Connect",
-    desc: "Send connection request & get phone contact",
+    desc: "Send connection request & get immediate phone contact",
     icon: HeartHandshake,
     badge: "Connect",
     accent: "bg-[#E5F1EA] text-[#427A65]",
@@ -109,8 +110,10 @@ export default function FindBlood() {
       return;
     }
 
-    const providerId =
-      donor.userId?._id || donor.userId?.id || donor.userId;
+    let providerId = donor.userId?._id || donor.userId?.id || donor.userId;
+    if (typeof providerId === "string" && providerId.startsWith("org_")) {
+      providerId = providerId.replace("org_", "");
+    }
 
     if (!providerId) {
       setRequestStatus((prev) => ({
@@ -127,10 +130,15 @@ export default function FindBlood() {
     setRequestStatus((prev) => ({ ...prev, [donor._id]: null }));
 
     try {
+      const isOrg = donor.isOrganization;
+      const desc = isOrg
+        ? `Urgent blood request for ${donor.bloodGroup} at ${donor.organizationName || 'Center'}.`
+        : `Urgent need: ${donor.bloodGroup} in ${location.trim()}.`;
+
       await sendConnectionRequest({
         providerId,
         type: "BLOOD",
-        description: `Urgent need: ${donor.bloodGroup} in ${location.trim()}.`,
+        description: desc,
         location: location.trim(),
       });
 
@@ -163,14 +171,14 @@ export default function FindBlood() {
             <div>
               <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-[#F0D5D8] bg-white px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-[#C94C55]">
                 <Droplets className="h-3 w-3" />
-                Blood Network
+                Integrated Blood Network
               </div>
 
               <h1 className="text-2xl font-bold tracking-tight text-[#24342E] sm:text-3xl">
-                Find Blood Donors
+                Find Blood Donors & Centers
               </h1>
               <p className="mt-1 text-xs text-[#6F7D76]">
-                Instant matching with verified local community donors.
+                Instant matching with verified community donors, blood banks, and hospital reserves.
               </p>
             </div>
 
@@ -278,12 +286,12 @@ export default function FindBlood() {
         {searched ? (
           <section className="pt-1">
             {loading ? (
-              <ScanningRadar label="Scanning for matching blood donors nearby..." />
+              <ScanningRadar label="Scanning for matching community donors and blood center reserves..." />
             ) : donors.length === 0 && !error ? (
               <div className="rounded-3xl border border-[#E2E9E4] bg-white p-6 shadow-2xs sm:p-8">
                 <EmptyStateVisual
                   type="blood"
-                  title="No registered donors found in this locality"
+                  title="No registered donors or blood centers found in this locality"
                   actionLabel="Register as a donor"
                   onAction={() => navigate("/blood/donor")}
                 />
@@ -292,15 +300,16 @@ export default function FindBlood() {
               <div>
                 <div className="mb-3.5 flex items-center justify-between">
                   <h2 className="text-sm font-bold text-[#24342E]">
-                    Available Donors ({donors.length})
+                    Available Matches ({donors.length})
                   </h2>
-                  <span className="text-[11px] text-[#6F7D76]">Local & Verified</span>
+                  <span className="text-[11px] text-[#6F7D76]">Peer Donors & Accredited Centers</span>
                 </div>
 
                 <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                   {donors.map((donor) => {
                     const status = requestStatus[donor._id];
                     const isAvailable = donor.availability;
+                    const isOrg = donor.isOrganization;
 
                     return (
                       <motion.article
@@ -318,7 +327,9 @@ export default function FindBlood() {
                               </span>
                               <div>
                                 <h3 className="text-xs font-semibold text-[#24342E]">
-                                  {donor.userId?.name || "Community Donor"}
+                                  {isOrg
+                                    ? donor.organizationName
+                                    : donor.userId?.name || "Community Donor"}
                                 </h3>
                                 <div className="mt-0.5 flex items-center gap-1.5">
                                   <span
@@ -327,15 +338,38 @@ export default function FindBlood() {
                                     }`}
                                   />
                                   <span className="text-[10px] font-medium text-[#6F7D76]">
-                                    {isAvailable ? "Available" : "Unavailable"}
+                                    {isOrg
+                                      ? `${donor.availableUnits || 0} units reported`
+                                      : isAvailable
+                                      ? "Available"
+                                      : "Unavailable"}
                                   </span>
                                 </div>
                               </div>
                             </div>
 
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[#E5F1EA] px-2 py-0.5 text-[10px] font-semibold text-[#427A65]">
-                              <ShieldCheck className="h-3 w-3" />
-                              Verified
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                isOrg
+                                  ? "bg-[#EAF1FA] text-[#4B78A8]"
+                                  : donor.verificationStatus === "VERIFIED"
+                                  ? "bg-[#E5F1EA] text-[#427A65]"
+                                  : "bg-amber-50 text-amber-800"
+                              }`}
+                            >
+                              {isOrg ? (
+                                <>
+                                  <Building2 className="h-3 w-3" />
+                                  {donor.organizationType?.replace("_", " ")}
+                                </>
+                              ) : donor.verificationStatus === "VERIFIED" ? (
+                                <>
+                                  <ShieldCheck className="h-3 w-3" />
+                                  Report Verified
+                                </>
+                              ) : (
+                                "Unverified Donor"
+                              )}
                             </span>
                           </div>
 
@@ -383,7 +417,7 @@ export default function FindBlood() {
                               "Unavailable"
                             ) : (
                               <>
-                                Send Request
+                                Send Connection Request
                                 <Send className="h-3.5 w-3.5" />
                               </>
                             )}
@@ -397,11 +431,8 @@ export default function FindBlood() {
             )}
           </section>
         ) : (
-          /* =======================================================
-             VISUAL CONTENT WHEN NO SEARCH PERFORMED YET (Prevents Empty Page)
-             ======================================================= */
+          /* Workflow Guide */
           <div className="space-y-5">
-            {/* 3-Step Visual Process: How Matching Works */}
             <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -455,7 +486,6 @@ export default function FindBlood() {
 
             {/* Quick Emergency Reference Cards */}
             <div className="grid gap-3 sm:grid-cols-2">
-              {/* Universal Donor Card */}
               <div className="flex items-center justify-between rounded-3xl border border-[#F2D5D8] bg-gradient-to-r from-white to-[#FFF5F6] p-4.5 shadow-2xs">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#C94C55] text-sm font-bold text-white shadow-2xs">
@@ -482,7 +512,6 @@ export default function FindBlood() {
                 </button>
               </div>
 
-              {/* Become Donor Prompt Card */}
               <div className="flex items-center justify-between rounded-3xl border border-[#D5E7DB] bg-gradient-to-r from-white to-[#F2F8F4] p-4.5 shadow-2xs">
                 <div className="flex items-center gap-3">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#427A65] text-white shadow-2xs">
@@ -493,7 +522,7 @@ export default function FindBlood() {
                       Are you healthy to donate?
                     </h3>
                     <p className="text-[11px] text-[#6F7D76]">
-                      Join the neighborhood donor registry
+                      Join the neighborhood peer donor registry
                     </p>
                   </div>
                 </div>

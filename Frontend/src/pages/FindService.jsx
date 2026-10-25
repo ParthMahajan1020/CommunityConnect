@@ -10,9 +10,10 @@ import {
   Phone,
   Sparkles,
   Search,
-  ArrowRight,
   CheckCircle2,
   Users,
+  Building2,
+  Tag
 } from "lucide-react";
 import { findServiceProviders, sendConnectionRequest } from "../services/api";
 import {
@@ -24,6 +25,10 @@ import { EmptyStateVisual } from "../components/visuals/EmptyStateVisual";
 import { useNavigate } from "react-router-dom";
 
 const serviceTypes = [
+  "Homemade food",
+  "Cleaning",
+  "Sweeper/helper",
+  "Guest assistance",
   "Plumber",
   "Electrician",
   "Carpenter",
@@ -35,7 +40,7 @@ const serviceTypes = [
   "Tutor",
   "Gardener",
   "Appliance Repair",
-  "Other",
+  "Other community services",
 ];
 
 const serviceWorkflowSteps = [
@@ -49,7 +54,7 @@ const serviceWorkflowSteps = [
   {
     step: "02",
     title: "Scan Providers",
-    desc: "Discover verified helpers near your home",
+    desc: "Discover community helpers and verified organizations",
     icon: Search,
     accent: "bg-[#E5F1EA] text-[#427A65]",
   },
@@ -63,10 +68,10 @@ const serviceWorkflowSteps = [
 ];
 
 const popularServices = [
+  { name: "Homemade food", label: "Tiffin & home meals" },
+  { name: "Cleaning", label: "House & deep clean" },
   { name: "Plumber", label: "Piping & leaks" },
   { name: "Electrician", label: "Wiring & power" },
-  { name: "House Help", label: "Daily chores" },
-  { name: "Tutor", label: "Academic lessons" },
 ];
 
 export default function FindService() {
@@ -126,8 +131,7 @@ export default function FindService() {
       return;
     }
 
-    const providerId =
-      provider.userId?._id || provider.userId?.id || provider.userId;
+    const providerId = provider.userId?._id || provider.userId?.id || provider.userId;
 
     if (!providerId) {
       setRequestStatus((prev) => ({
@@ -144,10 +148,14 @@ export default function FindService() {
     setRequestStatus((prev) => ({ ...prev, [provider._id]: null }));
 
     try {
+      const description = provider.isProfessional
+        ? `Professional booking inquiry for ${provider.title || serviceType} in ${location.trim()}.`
+        : `Service request for ${serviceType} in ${location.trim()}.`;
+
       await sendConnectionRequest({
         providerId,
         type: "SERVICE",
-        description: `Service request for ${serviceType} in ${location.trim()}.`,
+        description,
         location: location.trim(),
       });
 
@@ -180,14 +188,14 @@ export default function FindService() {
             <div>
               <div className="mb-2 inline-flex items-center gap-1.5 rounded-full border border-[#D3E2F4] bg-white px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-[#4B78A8]">
                 <Wrench className="h-3 w-3" />
-                Local Skills Network
+                Community & Pro Skills
               </div>
 
               <h1 className="text-2xl font-bold tracking-tight text-[#24342E] sm:text-3xl">
                 Find Local Services
               </h1>
               <p className="mt-1 text-xs text-[#6F7D76]">
-                Connect directly with skilled helpers in your neighborhood.
+                Connect with everyday community helpers and accredited professional service providers.
               </p>
             </div>
 
@@ -206,11 +214,11 @@ export default function FindService() {
                   Select Category
                 </label>
                 <span className="text-[11px] text-[#8C9892]">
-                  {serviceType ? `Selected: ${serviceType}` : "12 available"}
+                  {serviceType ? `Selected: ${serviceType}` : `${serviceTypes.length} available`}
                 </span>
               </div>
 
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto pr-1">
                 {serviceTypes.map((type) => (
                   <ServiceCategoryBadge
                     key={type}
@@ -277,7 +285,7 @@ export default function FindService() {
         {searched ? (
           <section className="pt-1">
             {loading ? (
-              <ServiceScanningRadar label="Scanning for available service providers..." />
+              <ServiceScanningRadar label="Scanning for available service providers and helpers..." />
             ) : providers.length === 0 && !error ? (
               <div className="rounded-3xl border border-[#E2E9E4] bg-white p-6 shadow-2xs sm:p-8">
                 <EmptyStateVisual
@@ -293,13 +301,14 @@ export default function FindService() {
                   <h2 className="text-sm font-bold text-[#24342E]">
                     Available Providers ({providers.length})
                   </h2>
-                  <span className="text-[11px] text-[#6F7D76]">Local & Verified</span>
+                  <span className="text-[11px] text-[#6F7D76]">Community Helpers & Verified Pros</span>
                 </div>
 
                 <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                   {providers.map((provider) => {
                     const status = requestStatus[provider._id];
                     const isAvailable = provider.availability;
+                    const isPro = provider.isProfessional;
 
                     return (
                       <motion.article
@@ -308,7 +317,6 @@ export default function FindService() {
                         animate={{ opacity: 1, y: 0 }}
                         className="group flex flex-col justify-between rounded-3xl border border-[#E2E9E4] bg-white p-4.5 shadow-2xs transition hover:border-[#D3E2F4] hover:shadow-xs"
                       >
-                        {/* Top Group & Badge */}
                         <div>
                           <div className="flex items-start justify-between">
                             <div className="flex items-center gap-2.5">
@@ -317,19 +325,50 @@ export default function FindService() {
                               </span>
                               <div>
                                 <h3 className="text-xs font-semibold text-[#24342E]">
-                                  {provider.userId?.name || "Community Helper"}
+                                  {isPro
+                                    ? provider.organizationName
+                                    : provider.userId?.name || "Community Helper"}
                                 </h3>
                                 <p className="text-[11px] font-medium text-[#4B78A8]">
-                                  {provider.serviceType}
+                                  {provider.title || provider.serviceType}
                                 </p>
                               </div>
                             </div>
 
-                            <span className="inline-flex items-center gap-1 rounded-full bg-[#E5F1EA] px-2 py-0.5 text-[10px] font-semibold text-[#427A65]">
-                              <ShieldCheck className="h-3 w-3" />
-                              Verified
+                            <span
+                              className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                isPro
+                                  ? "bg-[#EAF1FA] text-[#4B78A8]"
+                                  : "bg-[#E5F1EA] text-[#427A65]"
+                              }`}
+                            >
+                              {isPro ? (
+                                <>
+                                  <Building2 className="h-3 w-3" />
+                                  Pro Provider
+                                </>
+                              ) : (
+                                <>
+                                  <ShieldCheck className="h-3 w-3" />
+                                  Community
+                                </>
+                              )}
                             </span>
                           </div>
+
+                          {/* Pricing & Rate Basis */}
+                          {isPro && provider.pricing > 0 && (
+                            <div className="mt-2.5 inline-flex items-center gap-1 rounded-xl bg-slate-50 border border-slate-200 px-2 py-0.5 text-[11px] font-bold text-[#24342E]">
+                              <Tag className="h-3 w-3 text-[#4B78A8]" />
+                              <span>₹{provider.pricing} / {provider.pricingType}</span>
+                            </div>
+                          )}
+
+                          {provider.description && (
+                            <p className="mt-2 text-xs text-[#6F7D76] line-clamp-2 leading-relaxed">
+                              {provider.description}
+                            </p>
+                          )}
 
                           {/* Info chips */}
                           <div className="mt-3 space-y-1 border-t border-[#EEF2EF] pt-2.5 text-xs text-[#6F7D76]">
@@ -383,7 +422,7 @@ export default function FindService() {
                               "Unavailable"
                             ) : (
                               <>
-                                Send Request
+                                Send Connection Request
                                 <Send className="h-3.5 w-3.5" />
                               </>
                             )}
@@ -397,11 +436,8 @@ export default function FindService() {
             )}
           </section>
         ) : (
-          /* =======================================================
-             VISUAL CONTENT WHEN NO SEARCH PERFORMED YET (Prevents Empty Page)
-             ======================================================= */
+          /* Visual Content Workflow */
           <div className="space-y-5">
-            {/* 3-Step Visual Process: How Service Requests Work */}
             <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs sm:p-6">
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -453,7 +489,7 @@ export default function FindService() {
               </div>
             </section>
 
-            {/* Popular Categories Visual Quick-Select Grid */}
+            {/* Popular Categories */}
             <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs sm:p-6">
               <div className="mb-3.5 flex items-center justify-between">
                 <div>
@@ -497,31 +533,6 @@ export default function FindService() {
                 ))}
               </div>
             </section>
-
-            {/* Become Provider Prompt Banner */}
-            <div className="flex items-center justify-between rounded-3xl border border-[#D8E4F2] bg-gradient-to-r from-white to-[#F2F7FD] p-4.5 shadow-2xs">
-              <div className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#4B78A8] text-white shadow-2xs">
-                  <Wrench className="h-5 w-5" />
-                </span>
-                <div>
-                  <h3 className="text-xs font-bold text-[#24342E]">
-                    Have a practical skill to offer?
-                  </h3>
-                  <p className="text-[11px] text-[#6F7D76]">
-                    Register as a local service provider & help neighbors
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => navigate("/services/provider")}
-                className="inline-flex items-center gap-1 rounded-xl bg-[#4B78A8] px-3.5 py-2 text-[11px] font-semibold text-white transition hover:bg-[#3D648E]"
-              >
-                Offer Skill
-                <ArrowRight className="h-3 w-3" />
-              </button>
-            </div>
           </div>
         )}
       </div>

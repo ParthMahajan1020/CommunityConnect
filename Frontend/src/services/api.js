@@ -7,256 +7,359 @@ const API = axios.create({
     baseURL: API_BASE_URL
 });
 
-const registerUser = async (userData) => {
-    const response = await API.post("/auth/register", userData);
-    return response.data;
-};
-
-const verifyEmailOTP = async (email, otp) => {
-    const response = await API.post("/auth/verify-email-otp", {
-        email,
-        otp
-    });
-
-    return response.data;
-};
-
-const resendEmailOTP = async (email) => {
-    const response = await API.post("/auth/resend-email-otp", {
-        email
-    });
-
-    return response.data;
-};
-
-const loginUser = async (credentials) => {
-    const response = await API.post("/auth/login", credentials);
-
-    if (response.data.token) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem(
-            "user",
-            JSON.stringify(response.data.user)
-        );
+// Attach Authorization header automatically if token exists
+API.interceptors.request.use((config) => {
+    const token = localStorage.getItem("token");
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
     }
+    return config;
+});
 
-    return response.data;
-};
-
-export const getProfile = async () => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.get("/users/me", {
-        headers: {
-            Authorization: `Bearer ${token}`
+// Handle global responses & logout on 401
+API.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            // Optional auto-logout on invalid token
+            // localStorage.removeItem("token");
+            // localStorage.removeItem("user");
         }
-    });
-
-    return response.data;
-};
-
-
-export const updateProfile = async (profileData) => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.put(
-        "/users/me",
-        profileData,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    if (response.data.user) {
-        localStorage.setItem(
-            "user",
-            JSON.stringify(response.data.user)
-        );
+        return Promise.reject(error);
     }
+);
 
-    return response.data;
+// ============================================
+// HELPER METHODS
+// ============================================
+
+export const getStoredUser = () => {
+    try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+        return null;
+    }
 };
 
-export const findBloodDonors = async (bloodGroup, location) => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.get(
-        `/connections/matches`,
-        {
-            params: {
-                type: "BLOOD",
-                requirement: bloodGroup,
-                location: location
-            },
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
+export const getStoredRole = () => {
+    const user = getStoredUser();
+    return user?.role || "PUBLIC_USER";
 };
 
-
-export const sendConnectionRequest = async (requestData) => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.post(
-        "/connections/request",
-        requestData,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
-};
-
-export const getReceivedRequests = async () => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.get(
-        "/connections/requests/received",
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
-};
-
-
-export const getSentRequests = async () => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.get(
-        "/connections/requests/sent",
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
-};
-
-
-export const updateConnectionRequestStatus = async (
-    requestId,
-    status,
-) => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.patch(
-        `/connections/requests/${requestId}/status`,
-        {
-            status
-        },
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
-};
-
-export const registerBloodDonor = async (donorData) => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.post(
-        "/blood/register",
-        donorData,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
-};
-
-export const registerServiceProvider = async (serviceData) => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.post(
-        "/services/register",
-        serviceData,
-        {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
-};
-
-export const findServiceProviders = async (
-    serviceType,
-    location
-) => {
-    const token = localStorage.getItem("token");
-
-    const response = await API.get(
-        "/connections/matches",
-        {
-            params: {
-                type: "SERVICE",
-                requirement: serviceType,
-                location: location
-            },
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
-        }
-    );
-
-    return response.data;
-};
-
-const logoutUser = () => {
+export const logoutUser = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 };
 
-export const forgotPassword = async ({ email }) => {
-    const response = await API.post("/auth/forgot-password", {
+// ============================================
+// PORTAL 1: PUBLIC USER AUTH
+// ============================================
+
+export const registerUser = async (userData) => {
+    const response = await API.post("/auth/register", userData);
+    return response.data;
+};
+
+export const verifyEmailOTP = async (email, otp) => {
+    const response = await API.post("/auth/verify-email-otp", {
+        email,
+        otp
+    });
+    return response.data;
+};
+
+export const resendEmailOTP = async (email) => {
+    const response = await API.post("/auth/resend-email-otp", {
         email
     });
+    return response.data;
+};
+
+export const loginUser = async (credentials) => {
+    const response = await API.post("/auth/login", credentials);
+
+    if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
 
     return response.data;
 };
 
-export const resetPassword = async ({
-    email,
-    otp,
-    newPassword
-}) => {
+export const forgotPassword = async ({ email }) => {
+    const response = await API.post("/auth/forgot-password", { email });
+    return response.data;
+};
+
+export const resetPassword = async ({ email, otp, newPassword }) => {
     const response = await API.post("/auth/reset-password", {
         email,
         otp,
         newPassword
     });
+    return response.data;
+};
+
+// ============================================
+// PORTAL 2: PRIVATE ORGANIZATION AUTH
+// ============================================
+
+export const registerPrivate = async (orgData) => {
+    const response = await API.post("/auth/private/register", orgData);
+    return response.data;
+};
+
+export const loginPrivate = async (credentials) => {
+    const response = await API.post("/auth/private/login", credentials);
+
+    if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
 
     return response.data;
 };
 
-export {
-    registerUser,
-    verifyEmailOTP,
-    resendEmailOTP,
-    loginUser,
-    logoutUser,
+// ============================================
+// PORTAL 3: ADMIN AUTH
+// ============================================
+
+export const loginAdmin = async (credentials) => {
+    const response = await API.post("/auth/admin/login", credentials);
+
+    if (response.data.token) {
+        localStorage.setItem("token", response.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
+
+    return response.data;
+};
+
+// ============================================
+// USER PROFILE
+// ============================================
+
+export const getProfile = async () => {
+    const response = await API.get("/users/me");
+    if (response.data?.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
+    return response.data;
+};
+
+export const updateProfile = async (profileData) => {
+    const response = await API.put("/users/me", profileData);
+    if (response.data.user) {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+    }
+    return response.data;
+};
+
+// ============================================
+// BLOOD DONOR & MATCHING
+// ============================================
+
+export const findBloodDonors = async (bloodGroup, location) => {
+    const response = await API.get("/connections/matches", {
+        params: {
+            type: "BLOOD",
+            requirement: bloodGroup,
+            location: location
+        }
+    });
+    return response.data;
+};
+
+export const registerBloodDonor = async (donorData) => {
+    const response = await API.post("/blood/register", donorData);
+    return response.data;
+};
+
+export const getMyDonorProfile = async () => {
+    const response = await API.get("/blood/me");
+    return response.data;
+};
+
+export const toggleDonorAvailability = async () => {
+    const response = await API.patch("/blood/availability");
+    return response.data;
+};
+
+// ============================================
+// SERVICES & MATCHING
+// ============================================
+
+export const findServiceProviders = async (serviceType, location) => {
+    const response = await API.get("/connections/matches", {
+        params: {
+            type: "SERVICE",
+            requirement: serviceType,
+            location: location
+        }
+    });
+    return response.data;
+};
+
+export const registerServiceProvider = async (serviceData) => {
+    const response = await API.post("/services/register", serviceData);
+    return response.data;
+};
+
+export const getMyServiceProviderProfile = async () => {
+    const response = await API.get("/services/me");
+    return response.data;
+};
+
+export const toggleProviderAvailability = async () => {
+    const response = await API.patch("/services/availability");
+    return response.data;
+};
+
+// ============================================
+// CONNECTION REQUESTS
+// ============================================
+
+export const sendConnectionRequest = async (requestData) => {
+    const response = await API.post("/connections/request", requestData);
+    return response.data;
+};
+
+export const getReceivedRequests = async () => {
+    const response = await API.get("/connections/requests/received");
+    return response.data;
+};
+
+export const getSentRequests = async () => {
+    const response = await API.get("/connections/requests/sent");
+    return response.data;
+};
+
+export const updateConnectionRequestStatus = async (requestId, status) => {
+    const response = await API.patch(`/connections/requests/${requestId}/status`, {
+        status
+    });
+    return response.data;
+};
+
+// ============================================
+// PRIVATE ORGANIZATION PORTAL API
+// ============================================
+
+export const getOrgProfile = async () => {
+    const response = await API.get("/organization/profile");
+    return response.data;
+};
+
+export const updateOrgProfile = async (data) => {
+    const response = await API.put("/organization/profile", data);
+    return response.data;
+};
+
+export const getOrgStats = async () => {
+    const response = await API.get("/organization/stats");
+    return response.data;
+};
+
+export const getOrgInventory = async () => {
+    const response = await API.get("/organization/inventory");
+    return response.data;
+};
+
+export const updateOrgInventory = async (units) => {
+    const response = await API.put("/organization/inventory", { units });
+    return response.data;
+};
+
+export const getOrgServices = async () => {
+    const response = await API.get("/organization/services");
+    return response.data;
+};
+
+export const addOrgService = async (serviceData) => {
+    const response = await API.post("/organization/services", serviceData);
+    return response.data;
+};
+
+export const updateOrgService = async (serviceId, serviceData) => {
+    const response = await API.put(`/organization/services/${serviceId}`, serviceData);
+    return response.data;
+};
+
+export const deleteOrgService = async (serviceId) => {
+    const response = await API.delete(`/organization/services/${serviceId}`);
+    return response.data;
+};
+
+export const getOrgRequests = async () => {
+    const response = await API.get("/organization/requests");
+    return response.data;
+};
+
+export const updateOrgRequestStatus = async (requestId, status) => {
+    const response = await API.patch(`/organization/requests/${requestId}/status`, { status });
+    return response.data;
+};
+
+// ============================================
+// ADMIN PORTAL API
+// ============================================
+
+export const getAdminOverview = async () => {
+    const response = await API.get("/admin/overview");
+    return response.data;
+};
+
+export const getAdminUsers = async (params = {}) => {
+    const response = await API.get("/admin/users", { params });
+    return response.data;
+};
+
+export const updateAdminUserStatus = async (userId, accountStatus) => {
+    const response = await API.patch(`/admin/users/${userId}/status`, { accountStatus });
+    return response.data;
+};
+
+export const getAdminOrganizations = async (params = {}) => {
+    const response = await API.get("/admin/organizations", { params });
+    return response.data;
+};
+
+export const updateAdminOrgStatus = async (orgId, organizationStatus, notes = "") => {
+    const response = await API.patch(`/admin/organizations/${orgId}/status`, {
+        organizationStatus,
+        notes
+    });
+    return response.data;
+};
+
+export const getAdminBloodOrganizations = async () => {
+    const response = await API.get("/admin/blood-organizations");
+    return response.data;
+};
+
+export const getAdminServices = async () => {
+    const response = await API.get("/admin/services");
+    return response.data;
+};
+
+export const toggleAdminServiceStatus = async (serviceId, isActive) => {
+    const response = await API.patch(`/admin/services/${serviceId}/status`, { isActive });
+    return response.data;
+};
+
+export const getAdminRequests = async (params = {}) => {
+    const response = await API.get("/admin/requests", { params });
+    return response.data;
+};
+
+export const getAdminFeedbacks = async () => {
+    const response = await API.get("/admin/feedbacks");
+    return response.data;
+};
+
+export const getAdminAuditLogs = async () => {
+    const response = await API.get("/admin/audit-logs");
+    return response.data;
 };
 
 export default API;

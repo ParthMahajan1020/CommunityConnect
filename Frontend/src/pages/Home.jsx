@@ -10,6 +10,9 @@ import {
   ShieldCheck,
   Activity,
   Clock3,
+  Building2,
+  KeyRound,
+  Users
 } from "lucide-react";
 import NetworkIllustration from "../components/visuals/NetworkIllustration";
 
@@ -96,7 +99,7 @@ export default function Home() {
                 className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE9E0] bg-[#EDF5EF] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#427A65]"
               >
                 <Sparkles className="h-3.5 w-3.5" />
-                Community Support
+                Community Resilience
               </motion.div>
 
               <motion.h1
@@ -113,9 +116,9 @@ export default function Home() {
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mt-4 max-w-lg text-sm text-[#6F7D76] sm:text-base"
+                className="mt-4 max-w-lg text-sm text-[#6F7D76] sm:text-base leading-relaxed"
               >
-                Direct peer-to-peer blood donation and neighborhood service connections.
+                Three connected portals uniting neighbors, accredited blood banks, hospitals, and professional service providers on a unified ecosystem.
               </motion.p>
 
               {/* Fast Action Buttons */}
@@ -144,6 +147,15 @@ export default function Home() {
                   Find Services
                   <ArrowRight className="h-4 w-4" />
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => navigate("/private/login")}
+                  className="inline-flex items-center gap-2 rounded-2xl border border-[#E2E9E4] bg-white px-4 py-3 text-sm font-semibold text-[#24342E] shadow-xs transition hover:bg-[#F8FAF9] active:scale-[0.98]"
+                >
+                  <Building2 className="h-4 w-4 text-[#4B78A8]" />
+                  Org Portal
+                </button>
               </motion.div>
 
               {/* Micro Trust Badges */}
@@ -160,6 +172,10 @@ export default function Home() {
                 <span className="inline-flex items-center gap-1.5">
                   <Clock3 className="h-4 w-4 text-[#427A65]" /> Real-time Matching
                 </span>
+                <span className="text-[#D3DED7]">•</span>
+                <span className="inline-flex items-center gap-1.5">
+                  <Building2 className="h-4 w-4 text-[#4B78A8]" /> Accredited Centers
+                </span>
               </motion.div>
             </div>
 
@@ -175,7 +191,7 @@ export default function Home() {
         </section>
 
         {/* =======================================================
-            VISUAL FEATURE TILES (Minimal text, visual first)
+            VISUAL FEATURE TILES
         ======================================================= */}
         <section className="mt-8 sm:mt-12">
           <div className="mb-5 flex items-center justify-between">
@@ -206,7 +222,6 @@ export default function Home() {
                       : "border-[#D8E4F2] hover:border-[#4B78A8]/40"
                   } ${item.bg}`}
                 >
-                  {/* Top Badge */}
                   <div className="flex w-full items-center justify-between">
                     <div
                       className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-transform group-hover:scale-105 ${
@@ -229,7 +244,6 @@ export default function Home() {
                     </span>
                   </div>
 
-                  {/* Title & Subtitle */}
                   <div className="mt-5 sm:mt-6">
                     <h3 className="text-base font-bold text-[#24342E] sm:text-lg">
                       {item.title}
@@ -239,7 +253,6 @@ export default function Home() {
                     </p>
                   </div>
 
-                  {/* Micro action prompt */}
                   <div className="mt-5 flex items-center gap-1 text-xs font-semibold text-[#24342E] group-hover:text-[#427A65] transition-colors">
                     <span>Open</span>
                     <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
@@ -251,7 +264,7 @@ export default function Home() {
         </section>
 
         {/* =======================================================
-            VISUAL WORKFLOW (3-step visual diagram)
+            VISUAL WORKFLOW
         ======================================================= */}
         <section className="mt-8 rounded-[2rem] border border-[#E2E9E4] bg-white p-6 shadow-xs sm:mt-12 sm:p-8 lg:p-10">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -292,6 +305,103 @@ export default function Home() {
                 </div>
               );
             })}
+          </div>
+        </section>
+
+        {/* =======================================================
+            THREE INTEGRATED PORTALS OVERVIEW
+        ======================================================= */}
+        <section className="mt-8 sm:mt-12">
+          <div className="mb-5 flex items-center justify-between">
+            <div>
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#427A65]">
+                Platform Ecosystem
+              </span>
+              <h2 className="text-xl font-bold tracking-tight text-[#24342E] sm:text-2xl">
+                Three Integrated Portals
+              </h2>
+            </div>
+            <span className="text-xs text-[#6F7D76]">Unified Backend & Database</span>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-3">
+            {/* Portal 1 */}
+            <div className="flex flex-col justify-between rounded-3xl border border-[#D5E7DB] bg-white p-6 shadow-2xs hover:shadow-xs transition">
+              <div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65]">
+                  <Users className="h-6 w-6" />
+                </div>
+                <span className="mt-3 inline-block rounded-full bg-[#E5F1EA] px-2.5 py-0.5 text-[10px] font-bold text-[#427A65]">
+                  PORTAL 1
+                </span>
+                <h3 className="mt-2 text-lg font-bold text-[#24342E]">Public User Portal</h3>
+                <p className="mt-1 text-xs leading-relaxed text-[#6F7D76]">
+                  For local citizens seeking emergency blood, donating blood, finding everyday community services, and offering neighborhood help.
+                </p>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[#EEF2EF]">
+                <button
+                  type="button"
+                  onClick={() => navigate("/blood")}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#427A65] py-2.5 text-xs font-semibold text-white transition hover:bg-[#356651]"
+                >
+                  Explore Public Portal <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Portal 2 */}
+            <div className="flex flex-col justify-between rounded-3xl border border-[#D8E4F2] bg-white p-6 shadow-2xs hover:shadow-xs transition">
+              <div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF1FA] text-[#4B78A8]">
+                  <Building2 className="h-6 w-6" />
+                </div>
+                <span className="mt-3 inline-block rounded-full bg-[#EAF1FA] px-2.5 py-0.5 text-[10px] font-bold text-[#4B78A8]">
+                  PORTAL 2
+                </span>
+                <h3 className="mt-2 text-lg font-bold text-[#24342E]">Organization Portal</h3>
+                <p className="mt-1 text-xs leading-relaxed text-[#6F7D76]">
+                  For accredited Blood Banks, Hospitals, and Professional Service Providers with stock tracking and request management.
+                </p>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[#EEF2EF]">
+                <button
+                  type="button"
+                  onClick={() => navigate("/private/login")}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#4B78A8] py-2.5 text-xs font-semibold text-white transition hover:bg-[#3D648E]"
+                >
+                  Organization Portal <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Portal 3 */}
+            <div className="flex flex-col justify-between rounded-3xl border border-slate-300 bg-white p-6 shadow-2xs hover:shadow-xs transition">
+              <div>
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-100 text-slate-800">
+                  <KeyRound className="h-6 w-6" />
+                </div>
+                <span className="mt-3 inline-block rounded-full bg-slate-100 border border-slate-300 px-2.5 py-0.5 text-[10px] font-bold text-slate-800">
+                  PORTAL 3
+                </span>
+                <h3 className="mt-2 text-lg font-bold text-[#24342E]">Admin Portal</h3>
+                <p className="mt-1 text-xs leading-relaxed text-[#6F7D76]">
+                  For authorized verification officers and platform supervisors to approve organizations, review audit logs, and oversee the ecosystem.
+                </p>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-[#EEF2EF]">
+                <button
+                  type="button"
+                  onClick={() => navigate("/admin/login")}
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#24342E] py-2.5 text-xs font-semibold text-white transition hover:bg-[#34463D]"
+                >
+                  Admin Control <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </main>

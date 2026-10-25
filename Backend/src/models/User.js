@@ -38,6 +38,60 @@ const userSchema = new mongoose.Schema(
         },
 
         // ================================
+        // ROLE & ACCESS MANAGEMENT
+        // ================================
+
+        role: {
+            type: String,
+            enum: ['PUBLIC_USER', 'BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER', 'ADMIN'],
+            default: 'PUBLIC_USER'
+        },
+
+        accountStatus: {
+            type: String,
+            enum: ['ACTIVE', 'PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'],
+            default: 'ACTIVE'
+        },
+
+        // ================================
+        // PRIVATE ORGANIZATION DETAILS
+        // ================================
+
+        organizationStatus: {
+            type: String,
+            enum: ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'],
+            default: 'PENDING'
+        },
+
+        organizationName: {
+            type: String,
+            trim: true,
+            default: ''
+        },
+
+        registrationNumber: {
+            type: String,
+            trim: true,
+            default: ''
+        },
+
+        licenseDocument: {
+            type: String,
+            default: ''
+        },
+
+        address: {
+            type: String,
+            trim: true,
+            default: ''
+        },
+
+        bio: {
+            type: String,
+            default: ''
+        },
+
+        // ================================
         // EMAIL VERIFICATION
         // ================================
 
@@ -94,5 +148,8 @@ const userSchema = new mongoose.Schema(
         timestamps: true
     }
 );
+
+userSchema.index({ role: 1, accountStatus: 1 });
+userSchema.index({ organizationStatus: 1 });
 
 module.exports = mongoose.model('User', userSchema);

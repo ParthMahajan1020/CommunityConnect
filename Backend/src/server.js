@@ -9,6 +9,8 @@ const userRoutes = require("./routes/userRoutes");
 const bloodRoutes = require("./routes/bloodRoutes");
 const serviceRoutes = require("./routes/serviceRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
+const organizationRoutes = require("./routes/organizationRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -34,14 +36,15 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
     res.json({
-        message: "CommunityConnect API is running"
+        message: "CommunityConnect API is running",
+        version: "2.0.0",
+        portals: ["PUBLIC", "ORGANIZATION", "ADMIN"]
     });
 });
 
 app.get("/api/users", async (req, res) => {
     try {
-        const users = await User.find();
-
+        const users = await User.find({ role: 'PUBLIC_USER' }).select('-password');
         res.json(users);
     } catch (error) {
         res.status(500).json({
@@ -57,6 +60,8 @@ app.use("/api/users", userRoutes);
 app.use("/api/blood", bloodRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/feedback", feedbackRoutes);
+app.use("/api/organization", organizationRoutes);
+app.use("/api/admin", adminRoutes);
 
 app.use((error, req, res, next) => {
     console.error("Unhandled API error:", error.message);

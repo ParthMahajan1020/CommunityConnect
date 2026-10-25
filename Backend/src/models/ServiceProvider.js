@@ -28,6 +28,24 @@ const serviceProviderSchema = new mongoose.Schema(
         contact: {
             type: String,
             required: true
+        },
+
+        rateType: {
+            type: String,
+            enum: ["Hourly", "Daily", "Monthly"],
+            default: "Hourly"
+        },
+
+        description: {
+            type: String,
+            trim: true,
+            default: ""
+        },
+
+        status: {
+            type: String,
+            enum: ["ACTIVE", "PAUSED"],
+            default: "ACTIVE"
         }
     },
     {
@@ -36,6 +54,7 @@ const serviceProviderSchema = new mongoose.Schema(
 );
 
 serviceProviderSchema.index({ serviceType: 1, location: 1, availability: 1 });
+serviceProviderSchema.index({ userId: 1 });
 
 module.exports = mongoose.model(
     "ServiceProvider",
