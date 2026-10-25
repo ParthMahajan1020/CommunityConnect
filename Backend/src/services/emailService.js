@@ -19,7 +19,7 @@ const sendEmail = async ({ to, subject, html }) => {
             return { messageId: 'mock-id' };
         }
 
-        const senderEmail = process.env.EMAIL_FROM || process.env.BREVO_SENDER_EMAIL || 'communityconnect.team5@gmail.com';
+        const senderEmail = process.env.EMAIL_FROM || process.env.SENDER_EMAIL || process.env.BREVO_SENDER_EMAIL || 'communityconnect.team5@gmail.com';
         const senderName = process.env.EMAIL_FROM_NAME || process.env.BREVO_SENDER_NAME || 'CommunityConnect';
 
         const response = await client.transactionalEmails.sendTransacEmail({
