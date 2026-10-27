@@ -268,11 +268,61 @@ const deleteService = async (req, res) => {
 
 const getOrganizationRequests = async (req, res) => {
     try {
-        const requests = await ConnectionRequest.find({ providerId: req.userId })
-            .populate('requesterId', 'name email phone location')
-            .sort({ createdAt: -1 });
+        const { status, search, page = 1, limit = 15 } = req.query;
+        const query = { providerId: req.userId };
 
-        return res.status(200).json({ count: requests.length, requests });
+        if (status && status !== 'ALL' && ['PENDING', 'ACCEPTED', 'REJECTED', 'COMPLETED', 'INCOMPLETED'].includes(status.toUpperCase())) {
+            query.status = status.toUpperCase();
+        }
+
+        if (search && search.trim()) {
+            const regex = new RegExp(search.trim(), 'i');
+            const matchedRequesters = await User.find({
+                $or: [{ name: regex }, { email: regex }, { phone: regex }]
+            }).select('_id');
+            const requesterIds = matchedRequesters.map(u => u._id);
+
+            query.$or = [
+                { description: regex },
+                { location: regex },
+                { requesterId: { $in: requesterIds } }
+            ];
+        }
+
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 15));
+        const skip = (pageNum - 1) * limitNum;
+
+        const [requests, total, totalAll, pendingCount, acceptedCount, completedCount, rejectedCount] = await Promise.all([
+            ConnectionRequest.find(query)
+                .populate('requesterId', 'name email phone location')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            ConnectionRequest.countDocuments(query),
+            ConnectionRequest.countDocuments({ providerId: req.userId }),
+            ConnectionRequest.countDocuments({ providerId: req.userId, status: 'PENDING' }),
+            ConnectionRequest.countDocuments({ providerId: req.userId, status: 'ACCEPTED' }),
+            ConnectionRequest.countDocuments({ providerId: req.userId, status: 'COMPLETED' }),
+            ConnectionRequest.countDocuments({ providerId: req.userId, status: 'REJECTED' })
+        ]);
+
+        return res.status(200).json({
+            count: requests.length,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum) || 1,
+            requests,
+            summary: {
+                total: totalAll,
+                pending: pendingCount,
+                accepted: acceptedCount,
+                completed: completedCount,
+                rejected: rejectedCount
+            }
+        });
     } catch (error) {
         console.error('getOrganizationRequests error:', error.message);
         return res.status(500).json({ message: 'Failed to load organization requests.' });
@@ -284,18 +334,24 @@ const updateOrganizationRequestStatus = async (req, res) => {
         const { requestId } = req.params;
         const { status } = req.body;
 
-        if (!isValidId(requestId) || !['ACCEPTED', 'REJECTED'].includes(status)) {
-            return res.status(400).json({ message: 'Invalid request ID or status (must be ACCEPTED or REJECTED).' });
+        const allowed = ['ACCEPTED', 'REJECTED', 'COMPLETED'];
+        if (!isValidId(requestId) || !allowed.includes(status)) {
+            return res.status(400).json({ message: 'Invalid request ID or status (must be ACCEPTED, REJECTED, or COMPLETED).' });
         }
+
+        // Action condition: ACCEPT/REJECT requires PENDING; COMPLETE requires ACCEPTED
+        const allowedCurrentStatus = status === 'COMPLETED' ? 'ACCEPTED' : 'PENDING';
 
         const request = await ConnectionRequest.findOne({
             _id: requestId,
             providerId: req.userId,
-            status: 'PENDING'
+            status: allowedCurrentStatus
         }).populate('requesterId', 'name email phone');
 
         if (!request) {
-            return res.status(404).json({ message: 'Active pending request not found or unauthorized.' });
+            return res.status(404).json({
+                message: `Request not eligible for transition to ${status}. Current status must be ${allowedCurrentStatus}.`
+            });
         }
 
         request.status = status;

@@ -290,8 +290,8 @@ export const deleteOrgService = async (serviceId) => {
     return response.data;
 };
 
-export const getOrgRequests = async () => {
-    const response = await API.get("/organization/requests");
+export const getOrgRequests = async (params = {}) => {
+    const response = await API.get("/organization/requests", { params });
     return response.data;
 };
 

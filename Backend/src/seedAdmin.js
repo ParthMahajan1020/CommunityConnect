@@ -13,10 +13,10 @@ const seedAdmin = async () => {
         await mongoose.connect(process.env.MONGO_URI);
         console.log("MongoDB connected");
 
-        const adminEmail = process.env.ADMIN_SEED_EMAIL || "communityconnect.team5@gmail.com";
-        const adminPassword = process.env.ADMIN_SEED_PASSWORD || "communityconnect9373550012";
-        const adminName = process.env.ADMIN_SEED_NAME || "Parth Mahajan";
-        const adminPhone = process.env.ADMIN_SEED_PHONE || "+919373550012";
+        const adminEmail = process.env.ADMIN_SEED_EMAIL;
+        const adminPassword = process.env.ADMIN_SEED_PASSWORD;
+        const adminName = process.env.ADMIN_SEED_NAME;
+        const adminPhone = process.env.ADMIN_SEED_PHONE;
 
         const existingAdmin = await User.findOne({ email: adminEmail.toLowerCase().trim() });
 

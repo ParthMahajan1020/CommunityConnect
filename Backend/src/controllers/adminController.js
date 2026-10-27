@@ -3,6 +3,8 @@ const User = require('../models/User');
 const BloodInventory = require('../models/BloodInventory');
 const ProfessionalService = require('../models/ProfessionalService');
 const ConnectionRequest = require('../models/ConnectionRequest');
+const BloodDonor = require('../models/BloodDonor');
+const ServiceProvider = require('../models/ServiceProvider');
 const Feedback = require('../models/Feedback');
 const AuditLog = require('../models/AuditLog');
 const { sendOrganizationStatusUpdateEmail } = require('../services/emailService');
@@ -40,13 +42,23 @@ const getOverview = async (req, res) => {
             approvedOrganizations,
             suspendedOrganizations,
             rejectedOrganizations,
+            totalBloodDonors,
+            availableBloodDonors,
+            totalCommunityProviders,
+            activeCommunityProviders,
+            totalProfessionalServices,
             totalRequests,
-            activeRequests,
+            pendingRequests,
+            acceptedRequests,
             completedRequests,
             rejectedRequests,
-            recentLogs
+            incompletedRequests,
+            recentLogs,
+            pendingOrgsList,
+            recentRequestsList,
+            inventories
         ] = await Promise.all([
-            User.countDocuments({ role: 'PUBLIC_USER' }),
+            User.countDocuments({ $or: [{ role: 'PUBLIC_USER' }, { role: null }, { role: { $exists: false } }] }),
             User.countDocuments({ role: 'BLOOD_BANK' }),
             User.countDocuments({ role: 'HOSPITAL' }),
             User.countDocuments({ role: 'SERVICE_PROVIDER' }),
@@ -54,14 +66,73 @@ const getOverview = async (req, res) => {
             User.countDocuments({ role: { $in: ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'] }, organizationStatus: 'APPROVED' }),
             User.countDocuments({ role: { $in: ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'] }, organizationStatus: 'SUSPENDED' }),
             User.countDocuments({ role: { $in: ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'] }, organizationStatus: 'REJECTED' }),
+            BloodDonor.countDocuments(),
+            BloodDonor.countDocuments({ availability: true }),
+            ServiceProvider.countDocuments(),
+            ServiceProvider.countDocuments({ availability: true }),
+            ProfessionalService.countDocuments({ isActive: true }),
             ConnectionRequest.countDocuments(),
-            ConnectionRequest.countDocuments({ status: { $in: ['PENDING', 'ACCEPTED'] } }),
+            ConnectionRequest.countDocuments({ status: 'PENDING' }),
+            ConnectionRequest.countDocuments({ status: 'ACCEPTED' }),
             ConnectionRequest.countDocuments({ status: 'COMPLETED' }),
             ConnectionRequest.countDocuments({ status: 'REJECTED' }),
-            AuditLog.find().sort({ createdAt: -1 }).limit(8)
+            ConnectionRequest.countDocuments({ status: 'INCOMPLETED' }),
+            AuditLog.find().sort({ createdAt: -1 }).limit(10),
+            User.find({
+                role: { $in: ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'] },
+                organizationStatus: 'PENDING'
+            }).select('name organizationName role email phone location registrationNumber createdAt').sort({ createdAt: -1 }).limit(5),
+            ConnectionRequest.find()
+                .populate('requesterId', 'name email location')
+                .populate('providerId', 'name organizationName role location')
+                .sort({ createdAt: -1 })
+                .limit(6),
+            BloodInventory.find()
         ]);
 
         const totalPrivateOrganizations = totalBloodBanks + totalHospitals + totalServiceProviders;
+
+        // Sum blood inventory units by blood group
+        const bloodInventoryByGroup = {
+            'A+': 0, 'A-': 0, 'B+': 0, 'B-': 0,
+            'AB+': 0, 'AB-': 0, 'O+': 0, 'O-': 0
+        };
+        let totalInventoryUnits = 0;
+
+        for (const inv of inventories) {
+            if (inv.units) {
+                for (const [grp, count] of Object.entries(inv.units)) {
+                    if (bloodInventoryByGroup[grp] !== undefined) {
+                        const num = Number(count) || 0;
+                        bloodInventoryByGroup[grp] += num;
+                        totalInventoryUnits += num;
+                    }
+                }
+            }
+        }
+
+        // Monthly registration aggregation for the past 6 months
+        const sixMonthsAgo = new Date();
+        sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 5);
+        sixMonthsAgo.setDate(1);
+        sixMonthsAgo.setHours(0, 0, 0, 0);
+
+        const registrationTrends = await User.aggregate([
+            { $match: { createdAt: { $gte: sixMonthsAgo } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+                    publicUsers: {
+                        $sum: { $cond: [{ $eq: ["$role", "PUBLIC_USER"] }, 1, 0] }
+                    },
+                    organizations: {
+                        $sum: { $cond: [{ $in: ["$role", ["BLOOD_BANK", "HOSPITAL", "SERVICE_PROVIDER"]] }, 1, 0] }
+                    },
+                    total: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id": 1 } }
+        ]);
 
         return res.status(200).json({
             metrics: {
@@ -74,11 +145,33 @@ const getOverview = async (req, res) => {
                 approvedOrganizations,
                 suspendedOrganizations,
                 rejectedOrganizations,
+                totalBloodDonors,
+                availableBloodDonors,
+                totalCommunityProviders,
+                activeCommunityProviders,
+                totalProfessionalServices,
                 totalRequests,
-                activeRequests,
+                pendingRequests,
+                activeRequests: pendingRequests + acceptedRequests,
+                acceptedRequests,
                 completedRequests,
-                rejectedRequests
+                rejectedRequests,
+                incompletedRequests,
+                totalInventoryUnits,
+                bloodInventoryByGroup
             },
+            analytics: {
+                registrationTrends,
+                requestStatusBreakdown: {
+                    PENDING: pendingRequests,
+                    ACCEPTED: acceptedRequests,
+                    COMPLETED: completedRequests,
+                    REJECTED: rejectedRequests,
+                    INCOMPLETED: incompletedRequests
+                }
+            },
+            pendingOrgsList,
+            recentRequestsList,
             recentLogs
         });
     } catch (error) {
@@ -88,34 +181,132 @@ const getOverview = async (req, res) => {
 };
 
 // ============================================
-// 2. USER MANAGEMENT
+// 2. USER MANAGEMENT (ALL ELIGIBLE USERS + PROFILES)
 // ============================================
 
 const getUsers = async (req, res) => {
     try {
-        const { search, status, page = 1, limit = 25 } = req.query;
-        const query = { role: 'PUBLIC_USER' };
+        const { search, status, role, page = 1, limit = 15, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+        const query = {};
 
-        if (status && ['ACTIVE', 'SUSPENDED'].includes(status.toUpperCase())) {
+        // Role filter
+        if (role && role !== 'ALL') {
+            if (role === 'DONOR') {
+                const donors = await BloodDonor.find().select('userId');
+                const donorUserIds = donors.map(d => d.userId);
+                query._id = { $in: donorUserIds };
+            } else if (role === 'PROVIDER') {
+                const providers = await ServiceProvider.find().select('userId');
+                const providerUserIds = providers.map(p => p.userId);
+                query._id = { $in: providerUserIds };
+            } else if (role.toUpperCase() === 'PUBLIC_USER') {
+                const publicCondition = [{ role: 'PUBLIC_USER' }, { role: null }, { role: { $exists: false } }];
+                if (query.$or) {
+                    query.$and = [{ $or: query.$or }, { $or: publicCondition }];
+                    delete query.$or;
+                } else {
+                    query.$or = publicCondition;
+                }
+            } else if (['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER', 'ADMIN'].includes(role.toUpperCase())) {
+                query.role = role.toUpperCase();
+            }
+        }
+
+        // Status filter
+        if (status && status !== 'ALL' && ['ACTIVE', 'SUSPENDED'].includes(status.toUpperCase())) {
             query.accountStatus = status.toUpperCase();
         }
 
+        // Search across name, email, phone, location
         if (search && search.trim()) {
             const regex = new RegExp(search.trim(), 'i');
-            query.$or = [{ name: regex }, { email: regex }, { phone: regex }, { location: regex }];
+            const searchCondition = [
+                { name: regex },
+                { email: regex },
+                { phone: regex },
+                { location: regex }
+            ];
+
+            if (query.$or) {
+                query.$and = [{ $or: query.$or }, { $or: searchCondition }];
+                delete query.$or;
+            } else {
+                query.$or = searchCondition;
+            }
         }
 
-        const skip = (Math.max(1, parseInt(page, 10)) - 1) * parseInt(limit, 10);
-        const [users, total] = await Promise.all([
-            User.find(query).select('-password').sort({ createdAt: -1 }).skip(skip).limit(parseInt(limit, 10)),
-            User.countDocuments(query)
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 15));
+        const skip = (pageNum - 1) * limitNum;
+        const sortDirection = sortOrder === 'asc' ? 1 : -1;
+
+        const [users, total, totalAllUsers, totalPublicUsers, totalDonors, totalProviders, totalOrganizations, totalSuspended] = await Promise.all([
+            User.find(query)
+                .select('-password')
+                .sort({ [sortBy]: sortDirection })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            User.countDocuments(query),
+            User.countDocuments(),
+            User.countDocuments({ $or: [{ role: 'PUBLIC_USER' }, { role: null }, { role: { $exists: false } }] }),
+            BloodDonor.countDocuments(),
+            ServiceProvider.countDocuments(),
+            User.countDocuments({ role: { $in: ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'] } }),
+            User.countDocuments({ accountStatus: 'SUSPENDED' })
         ]);
 
+        // Attach donor and provider profiles if they exist
+        const userIds = users.map(u => u._id);
+        const [donorProfiles, providerProfiles] = await Promise.all([
+            BloodDonor.find({ userId: { $in: userIds } }).lean(),
+            ServiceProvider.find({ userId: { $in: userIds } }).lean()
+        ]);
+
+        const donorMap = new Map();
+        donorProfiles.forEach(d => donorMap.set(d.userId.toString(), d));
+
+        const providerMap = new Map();
+        providerProfiles.forEach(p => providerMap.set(p.userId.toString(), p));
+
+        const enrichedUsers = users.map(u => {
+            const donor = donorMap.get(u._id.toString());
+            const provider = providerMap.get(u._id.toString());
+            return {
+                ...u,
+                role: u.role || 'PUBLIC_USER',
+                accountStatus: u.accountStatus || 'ACTIVE',
+                donorProfile: donor ? {
+                    bloodGroup: donor.bloodGroup,
+                    availability: donor.availability,
+                    verificationStatus: donor.verificationStatus,
+                    hasReportLater: donor.hasReportLater,
+                    reportDocument: donor.reportDocument
+                } : null,
+                providerProfile: provider ? {
+                    serviceType: provider.serviceType,
+                    rateType: provider.rateType,
+                    availability: provider.availability,
+                    status: provider.status
+                } : null
+            };
+        });
+
         return res.status(200).json({
+            success: true,
             total,
-            page: parseInt(page, 10),
-            totalPages: Math.ceil(total / parseInt(limit, 10)),
-            users
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum) || 1,
+            users: enrichedUsers,
+            summary: {
+                totalAllUsers,
+                totalPublicUsers,
+                totalDonors,
+                totalProviders,
+                totalOrganizations,
+                totalSuspended
+            }
         });
     } catch (error) {
         console.error('getUsers error:', error.message);
@@ -174,14 +365,15 @@ const updateUserStatus = async (req, res) => {
 
 const getOrganizations = async (req, res) => {
     try {
-        const { status, type, search } = req.query;
-        const query = { role: { $in: ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'] } };
+        const { status, type, search, page = 1, limit = 15, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+        const orgRoles = ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'];
+        const query = { role: { $in: orgRoles } };
 
-        if (status && ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'].includes(status.toUpperCase())) {
+        if (status && status !== 'ALL' && ['PENDING', 'APPROVED', 'REJECTED', 'SUSPENDED'].includes(status.toUpperCase())) {
             query.organizationStatus = status.toUpperCase();
         }
 
-        if (type && ['BLOOD_BANK', 'HOSPITAL', 'SERVICE_PROVIDER'].includes(type.toUpperCase())) {
+        if (type && type !== 'ALL' && orgRoles.includes(type.toUpperCase())) {
             query.role = type.toUpperCase();
         }
 
@@ -196,11 +388,80 @@ const getOrganizations = async (req, res) => {
             ];
         }
 
-        const organizations = await User.find(query).select('-password').sort({ createdAt: -1 });
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 15));
+        const skip = (pageNum - 1) * limitNum;
+        const sortDirection = sortOrder === 'asc' ? 1 : -1;
+
+        const [organizations, total, totalOrgs, pendingCount, approvedCount, rejectedCount, suspendedCount, bloodBanksCount, hospitalsCount, serviceProvidersCount] = await Promise.all([
+            User.find(query)
+                .select('-password')
+                .sort({ [sortBy]: sortDirection })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            User.countDocuments(query),
+            User.countDocuments({ role: { $in: orgRoles } }),
+            User.countDocuments({ role: { $in: orgRoles }, organizationStatus: 'PENDING' }),
+            User.countDocuments({ role: { $in: orgRoles }, organizationStatus: 'APPROVED' }),
+            User.countDocuments({ role: { $in: orgRoles }, organizationStatus: 'REJECTED' }),
+            User.countDocuments({ role: { $in: orgRoles }, organizationStatus: 'SUSPENDED' }),
+            User.countDocuments({ role: 'BLOOD_BANK' }),
+            User.countDocuments({ role: 'HOSPITAL' }),
+            User.countDocuments({ role: 'SERVICE_PROVIDER' })
+        ]);
+
+        // Attach operational counts for organizations
+        const orgIds = organizations.map(o => o._id);
+        const [inventories, services] = await Promise.all([
+            BloodInventory.find({ organizationId: { $in: orgIds } }).lean(),
+            ProfessionalService.find({ organizationId: { $in: orgIds } }).lean()
+        ]);
+
+        const inventoryMap = new Map();
+        inventories.forEach(inv => {
+            let totalUnits = 0;
+            if (inv.units) {
+                for (const u of Object.values(inv.units)) totalUnits += Number(u) || 0;
+            }
+            inventoryMap.set(inv.organizationId.toString(), { units: inv.units, totalUnits, lastUpdated: inv.lastUpdated });
+        });
+
+        const serviceCountMap = new Map();
+        services.forEach(s => {
+            const key = s.organizationId.toString();
+            serviceCountMap.set(key, (serviceCountMap.get(key) || 0) + 1);
+        });
+
+        const enrichedOrgs = organizations.map(org => {
+            const inv = inventoryMap.get(org._id.toString());
+            const srvCount = serviceCountMap.get(org._id.toString()) || 0;
+            return {
+                ...org,
+                inventory: inv ? inv.units : null,
+                totalInventoryUnits: inv ? inv.totalUnits : 0,
+                inventoryLastUpdated: inv ? inv.lastUpdated : null,
+                totalServicesCount: srvCount
+            };
+        });
 
         return res.status(200).json({
-            count: organizations.length,
-            organizations
+            success: true,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum) || 1,
+            organizations: enrichedOrgs,
+            summary: {
+                total: totalOrgs,
+                pending: pendingCount,
+                approved: approvedCount,
+                rejected: rejectedCount,
+                suspended: suspendedCount,
+                bloodBanks: bloodBanksCount,
+                hospitals: hospitalsCount,
+                serviceProviders: serviceProvidersCount
+            }
         });
     } catch (error) {
         console.error('getOrganizations error:', error.message);
@@ -281,25 +542,49 @@ const getBloodOrganizations = async (req, res) => {
     try {
         const organizations = await User.find({
             role: { $in: ['BLOOD_BANK', 'HOSPITAL'] }
-        }).select('-password').sort({ organizationStatus: 1, createdAt: -1 });
+        }).select('-password').sort({ organizationStatus: 1, createdAt: -1 }).lean();
 
         const orgIds = organizations.map(o => o._id);
-        const inventories = await BloodInventory.find({ organizationId: { $in: orgIds } });
+        const inventories = await BloodInventory.find({ organizationId: { $in: orgIds } }).lean();
+
         const inventoryMap = {};
+        const aggregateInventory = {
+            'A+': 0, 'A-': 0, 'B+': 0, 'B-': 0,
+            'AB+': 0, 'AB-': 0, 'O+': 0, 'O-': 0,
+            totalUnits: 0
+        };
+
         for (const inv of inventories) {
+            let facilityTotal = 0;
+            if (inv.units) {
+                for (const [grp, count] of Object.entries(inv.units)) {
+                    const num = Number(count) || 0;
+                    if (aggregateInventory[grp] !== undefined) {
+                        aggregateInventory[grp] += num;
+                        aggregateInventory.totalUnits += num;
+                    }
+                    facilityTotal += num;
+                }
+            }
             inventoryMap[inv.organizationId.toString()] = {
                 units: inv.units,
+                totalUnits: facilityTotal,
                 lastUpdated: inv.lastUpdated
             };
         }
 
         const combined = organizations.map(org => ({
-            ...org.toObject(),
+            ...org,
             inventory: inventoryMap[org._id.toString()]?.units || {},
+            totalUnits: inventoryMap[org._id.toString()]?.totalUnits || 0,
             inventoryLastUpdated: inventoryMap[org._id.toString()]?.lastUpdated || null
         }));
 
-        return res.status(200).json({ count: combined.length, bloodOrganizations: combined });
+        return res.status(200).json({
+            count: combined.length,
+            bloodOrganizations: combined,
+            aggregateInventory
+        });
     } catch (error) {
         console.error('getBloodOrganizations error:', error.message);
         return res.status(500).json({ message: 'Failed to fetch blood organizations.' });
@@ -312,11 +597,50 @@ const getBloodOrganizations = async (req, res) => {
 
 const getServiceListings = async (req, res) => {
     try {
-        const services = await ProfessionalService.find()
-            .populate('organizationId', 'name organizationName email phone location organizationStatus')
-            .sort({ createdAt: -1 });
+        const { category, isActive, search, page = 1, limit = 20 } = req.query;
+        const query = {};
 
-        return res.status(200).json({ count: services.length, services });
+        if (category && category !== 'ALL') {
+            query.category = new RegExp(`^${category.trim()}$`, 'i');
+        }
+
+        if (isActive !== undefined && isActive !== 'ALL') {
+            query.isActive = isActive === 'true' || isActive === true;
+        }
+
+        if (search && search.trim()) {
+            const regex = new RegExp(search.trim(), 'i');
+            query.$or = [{ title: regex }, { description: regex }, { location: regex }, { category: regex }];
+        }
+
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+        const skip = (pageNum - 1) * limitNum;
+
+        const [services, total, totalActive, totalInactive] = await Promise.all([
+            ProfessionalService.find(query)
+                .populate('organizationId', 'name organizationName email phone location organizationStatus')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            ProfessionalService.countDocuments(query),
+            ProfessionalService.countDocuments({ isActive: true }),
+            ProfessionalService.countDocuments({ isActive: false })
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum) || 1,
+            services,
+            summary: {
+                totalActive,
+                totalInactive
+            }
+        });
     } catch (error) {
         console.error('getServiceListings error:', error.message);
         return res.status(500).json({ message: 'Failed to fetch service listings.' });
@@ -360,29 +684,85 @@ const toggleServiceStatus = async (req, res) => {
 };
 
 // ============================================
-// 6. REQUEST ECOSYSTEM
+// 6. REQUEST ECOSYSTEM (ACROSS ENTIRE PLATFORM)
 // ============================================
 
 const getPlatformRequests = async (req, res) => {
     try {
-        const { type, status } = req.query;
+        const { type, status, search, page = 1, limit = 15, dateFrom, dateTo } = req.query;
         const query = {};
 
-        if (type && ['BLOOD', 'SERVICE', 'JOB'].includes(type.toUpperCase())) {
+        if (type && type !== 'ALL' && ['BLOOD', 'SERVICE', 'JOB'].includes(type.toUpperCase())) {
             query.type = type.toUpperCase();
         }
 
-        if (status && ['PENDING', 'ACCEPTED', 'REJECTED', 'COMPLETED', 'INCOMPLETED'].includes(status.toUpperCase())) {
+        if (status && status !== 'ALL' && ['PENDING', 'ACCEPTED', 'REJECTED', 'COMPLETED', 'INCOMPLETED'].includes(status.toUpperCase())) {
             query.status = status.toUpperCase();
         }
 
-        const requests = await ConnectionRequest.find(query)
-            .populate('requesterId', 'name email phone location')
-            .populate('providerId', 'name organizationName email phone location role')
-            .sort({ createdAt: -1 })
-            .limit(100);
+        if (dateFrom || dateTo) {
+            query.createdAt = {};
+            if (dateFrom) query.createdAt.$gte = new Date(dateFrom);
+            if (dateTo) query.createdAt.$lte = new Date(dateTo);
+        }
 
-        return res.status(200).json({ count: requests.length, requests });
+        if (search && search.trim()) {
+            const regex = new RegExp(search.trim(), 'i');
+            // Find users matching search first to match requester or provider
+            const matchedUsers = await User.find({
+                $or: [{ name: regex }, { email: regex }, { organizationName: regex }]
+            }).select('_id');
+            const matchedUserIds = matchedUsers.map(u => u._id);
+
+            query.$or = [
+                { description: regex },
+                { location: regex },
+                { requesterId: { $in: matchedUserIds } },
+                { providerId: { $in: matchedUserIds } }
+            ];
+        }
+
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 15));
+        const skip = (pageNum - 1) * limitNum;
+
+        const [requests, total, totalAll, pendingCount, acceptedCount, completedCount, rejectedCount, incompletedCount, bloodCount, serviceCount] = await Promise.all([
+            ConnectionRequest.find(query)
+                .populate('requesterId', 'name email phone location role')
+                .populate('providerId', 'name organizationName email phone location role address')
+                .sort({ createdAt: -1 })
+                .skip(skip)
+                .limit(limitNum)
+                .lean(),
+            ConnectionRequest.countDocuments(query),
+            ConnectionRequest.countDocuments(),
+            ConnectionRequest.countDocuments({ status: 'PENDING' }),
+            ConnectionRequest.countDocuments({ status: 'ACCEPTED' }),
+            ConnectionRequest.countDocuments({ status: 'COMPLETED' }),
+            ConnectionRequest.countDocuments({ status: 'REJECTED' }),
+            ConnectionRequest.countDocuments({ status: 'INCOMPLETED' }),
+            ConnectionRequest.countDocuments({ type: 'BLOOD' }),
+            ConnectionRequest.countDocuments({ type: 'SERVICE' })
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum) || 1,
+            requests,
+            summary: {
+                total: totalAll,
+                pending: pendingCount,
+                accepted: acceptedCount,
+                completed: completedCount,
+                rejected: rejectedCount,
+                incompleted: incompletedCount,
+                bloodRequests: bloodCount,
+                serviceRequests: serviceCount
+            }
+        });
     } catch (error) {
         console.error('getPlatformRequests error:', error.message);
         return res.status(500).json({ message: 'Failed to fetch platform requests.' });
@@ -396,8 +776,9 @@ const getPlatformRequests = async (req, res) => {
 const getFeedbacks = async (req, res) => {
     try {
         const feedbacks = await Feedback.find()
-            .populate('userId', 'name email phone')
-            .sort({ createdAt: -1 });
+            .populate('userId', 'name email phone location')
+            .sort({ createdAt: -1 })
+            .lean();
 
         return res.status(200).json({ count: feedbacks.length, feedbacks });
     } catch (error) {
@@ -412,8 +793,39 @@ const getFeedbacks = async (req, res) => {
 
 const getAuditLogs = async (req, res) => {
     try {
-        const logs = await AuditLog.find().sort({ createdAt: -1 }).limit(150);
-        return res.status(200).json({ count: logs.length, logs });
+        const { action, targetType, search, page = 1, limit = 20 } = req.query;
+        const query = {};
+
+        if (action && action !== 'ALL') {
+            query.action = action;
+        }
+
+        if (targetType && targetType !== 'ALL') {
+            query.targetType = targetType;
+        }
+
+        if (search && search.trim()) {
+            const regex = new RegExp(search.trim(), 'i');
+            query.$or = [{ adminEmail: regex }, { action: regex }];
+        }
+
+        const pageNum = Math.max(1, parseInt(page, 10) || 1);
+        const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+        const skip = (pageNum - 1) * limitNum;
+
+        const [logs, total] = await Promise.all([
+            AuditLog.find(query).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+            AuditLog.countDocuments(query)
+        ]);
+
+        return res.status(200).json({
+            success: true,
+            total,
+            page: pageNum,
+            limit: limitNum,
+            totalPages: Math.ceil(total / limitNum) || 1,
+            logs
+        });
     } catch (error) {
         console.error('getAuditLogs error:', error.message);
         return res.status(500).json({ message: 'Failed to load audit logs.' });
