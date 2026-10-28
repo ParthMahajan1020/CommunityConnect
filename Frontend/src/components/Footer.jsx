@@ -1,127 +1,163 @@
-import { HeartHandshake, Building2, KeyRound, ShieldCheck } from "lucide-react";
+import { HeartHandshake, Building2, KeyRound, Droplets, Wrench } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function Footer() {
   return (
-    <footer className="relative border-t border-[#E2E9E4] bg-white">
-      {/* Top subtle emerald gradient accent */}
-      <div className="h-0.5 w-full bg-gradient-to-r from-transparent via-[#427A65]/30 to-transparent" />
+    <footer className="relative bg-[#111714] text-white overflow-hidden border-t border-white/10">
+      {/* Subtle background glow */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-24 bg-gradient-to-b from-[#427A65]/15 to-transparent blur-3xl pointer-events-none" />
 
-      <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
-          {/* Brand Info */}
-          <div className="col-span-2 md:col-span-4 lg:col-span-2 pr-0 lg:pr-8">
-            <Link to="/" className="inline-flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65] shadow-2xs">
+      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
+        
+        {/* Top: Large Statement & Wordmark */}
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 pb-12 border-b border-white/10">
+          <div className="space-y-4 max-w-xl">
+            <Link to="/" className="inline-flex items-center gap-2.5 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#427A65] text-white shadow-xs transition group-hover:scale-105">
                 <HeartHandshake className="h-5 w-5" />
               </div>
-              <span className="text-base font-bold tracking-tight text-[#24342E]">
-                Community<span className="text-[#427A65]">Connect</span>
+              <span className="text-xl font-extrabold tracking-tight text-white">
+                Community<span className="text-[#8AD4B2]">Connect</span>
               </span>
             </Link>
 
-            <p className="mt-3 max-w-sm text-xs leading-relaxed text-[#6F7D76]">
-              A modern peer-to-peer community platform bridging emergency blood needs, home help, food assistance, caregiving, and professional repairs with verified oversight.
-            </p>
-
-            {/* Live Ecosystem Status */}
-            <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-[#D5E7DB] bg-[#F2F8F4] px-3.5 py-1 text-[11px] font-semibold text-[#356651]">
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#427A65] opacity-75" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#427A65]" />
-              </span>
-              <span>All 3 Portals Live & Verified</span>
-            </div>
+            <h2 className="text-3xl sm:text-5xl font-black tracking-tight text-white leading-tight">
+              Help starts <span className="text-[#8AD4B2]">nearby.</span>
+            </h2>
           </div>
 
-          {/* Column 1: Explore Help */}
+          <div className="flex flex-wrap items-center gap-3">
+            <Link
+              to="/blood"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 px-5 py-3 text-xs font-bold text-white transition backdrop-blur-sm"
+            >
+              <Droplets className="h-3.5 w-3.5 text-[#C94C55]" />
+              <span>Find Blood</span>
+            </Link>
+
+            <Link
+              to="/services"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 px-5 py-3 text-xs font-bold text-white transition backdrop-blur-sm"
+            >
+              <Wrench className="h-3.5 w-3.5 text-[#8EB8E5]" />
+              <span>Find Services</span>
+            </Link>
+
+            <Link
+              to="/private/login"
+              className="inline-flex items-center gap-2 rounded-2xl border border-white/15 bg-white/5 hover:bg-white/10 px-5 py-3 text-xs font-bold text-white transition backdrop-blur-sm"
+            >
+              <Building2 className="h-3.5 w-3.5 text-[#8AD4B2]" />
+              <span>Organizations</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* Center: Minimal Links Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 py-10 text-xs">
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#24342E]">
-              Explore Help
-            </h3>
-            <ul className="mt-4 space-y-2.5 text-xs text-[#6F7D76]">
+            <span className="font-bold uppercase tracking-wider text-white/40 block mb-3">
+              Explore
+            </span>
+            <ul className="space-y-2.5 text-white/70">
               <li>
-                <Link to="/blood" className="transition hover:text-[#C94C55]">
-                  Find Blood
+                <Link to="/blood" className="hover:text-white transition">
+                  Emergency Blood
                 </Link>
               </li>
               <li>
-                <Link to="/services" className="transition hover:text-[#4B78A8]">
-                  Find Services
+                <Link to="/services" className="hover:text-white transition">
+                  Local Services
                 </Link>
               </li>
               <li>
-                <Link to="/blood/donor" className="transition hover:text-[#427A65]">
-                  Become a Donor
+                <Link to="/services?category=Cleaning" className="hover:text-white transition">
+                  Home Help
                 </Link>
               </li>
               <li>
-                <Link to="/services/provider" className="transition hover:text-[#427A65]">
-                  Offer Skills
+                <Link to="/services?category=Food" className="hover:text-white transition">
+                  Homemade Food
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 2: Organizations */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#4B78A8]">
+            <span className="font-bold uppercase tracking-wider text-white/40 block mb-3">
+              Offer Aid
+            </span>
+            <ul className="space-y-2.5 text-white/70">
+              <li>
+                <Link to="/blood/donor" className="hover:text-white transition">
+                  Volunteer Blood Donor
+                </Link>
+              </li>
+              <li>
+                <Link to="/services/provider" className="hover:text-white transition">
+                  List Provider Skills
+                </Link>
+              </li>
+              <li>
+                <Link to="/requests" className="hover:text-white transition">
+                  Connection Requests
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <span className="font-bold uppercase tracking-wider text-[#8EB8E5] block mb-3">
               Organizations
-            </h3>
-            <ul className="mt-4 space-y-2.5 text-xs text-[#6F7D76]">
+            </span>
+            <ul className="space-y-2.5 text-white/70">
               <li>
-                <Link to="/private/login" className="inline-flex items-center gap-1.5 transition hover:text-[#4B78A8]">
-                  <Building2 className="h-3 w-3 text-[#4B78A8]" />
-                  <span>Org Portal Sign In</span>
+                <Link to="/private/login" className="hover:text-white transition">
+                  Hospital & Blood Bank Login
                 </Link>
               </li>
               <li>
-                <Link to="/private/register" className="transition hover:text-[#4B78A8]">
-                  Register Blood Bank / Hospital
-                </Link>
-              </li>
-              <li>
-                <Link to="/private/register" className="transition hover:text-[#4B78A8]">
-                  Register Service Provider
+                <Link to="/private/register" className="hover:text-white transition">
+                  Register Facility
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Governance & Safety */}
           <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#24342E]">
-              Governance
-            </h3>
-            <ul className="mt-4 space-y-2.5 text-xs text-[#6F7D76]">
+            <span className="font-bold uppercase tracking-wider text-white/40 block mb-3">
+              Platform
+            </span>
+            <ul className="space-y-2.5 text-white/70">
               <li>
-                <Link to="/admin/login" className="inline-flex items-center gap-1.5 transition hover:text-slate-900">
-                  <KeyRound className="h-3 w-3 text-slate-700" />
-                  <span>Admin Workspace</span>
+                <Link to="/login" className="hover:text-white transition">
+                  Member Sign In
                 </Link>
               </li>
               <li>
-                <Link to="/feedback" className="transition hover:text-[#427A65]">
-                  Community Feedback
+                <Link to="/register" className="hover:text-white transition">
+                  Create Account
                 </Link>
               </li>
-              <li className="inline-flex items-center gap-1 text-[11px] text-[#8C9892]">
-                <ShieldCheck className="h-3 w-3 text-emerald-600" />
-                <span>Verified Ecosystem</span>
+              <li>
+                <Link to="/admin/login" className="inline-flex items-center gap-1 hover:text-white transition">
+                  <KeyRound className="h-3 w-3" />
+                  <span>Admin Access</span>
+                </Link>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom Credits */}
-        <div className="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-[#EEF2EF] pt-6 text-xs text-[#8C9892]">
-          <p>© {new Date().getFullYear()} CommunityConnect. Empowering local communities across India.</p>
-          <div className="flex items-center gap-4">
-            <Link to="/privacy" className="hover:text-[#24342E]">Privacy & Safety</Link>
-            <span>•</span>
-            <Link to="/terms" className="hover:text-[#24342E]">Terms of Service</Link>
+        {/* Bottom Copyright & Ecosystem Pill */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-8 border-t border-white/10 text-xs text-white/50">
+          <p>© {new Date().getFullYear()} CommunityConnect. Connecting neighbors with direct transparency.</p>
+          <div className="flex items-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span>Community Network Active</span>
           </div>
         </div>
+
       </div>
     </footer>
   );

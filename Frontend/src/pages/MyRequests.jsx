@@ -17,6 +17,8 @@ import {
   AlertCircle,
   Wrench,
   Phone,
+  PieChart,
+  Droplets,
 } from "lucide-react";
 
 import {
@@ -120,8 +122,210 @@ const getRequestPerson = (request, received) => {
   );
 };
 
+function RequestDistributionChart({
+  receivedRequests = [],
+  sentRequests = [],
+  activeTab = "received",
+}) {
+  const [scope, setScope] = useState("all");
+
+  const targetList =
+    scope === "all"
+      ? [...receivedRequests, ...sentRequests]
+      : activeTab === "received"
+      ? receivedRequests
+      : sentRequests;
+
+  const bloodCount = targetList.filter((r) => {
+    const type = String(
+      r?.type || r?.requestType || r?.category || ""
+    ).toUpperCase();
+    return type.includes("BLOOD");
+  }).length;
+
+  const serviceCount = targetList.filter((r) => {
+    const type = String(
+      r?.type || r?.requestType || r?.category || ""
+    ).toUpperCase();
+    return !type.includes("BLOOD");
+  }).length;
+
+  const total = bloodCount + serviceCount;
+  const bloodPct = total > 0 ? Math.round((bloodCount / total) * 100) : 0;
+  const servicePct = total > 0 ? 100 - bloodPct : 0;
+
+  const radius = 38;
+  const circumference = 2 * Math.PI * radius;
+  const bloodDash = (bloodPct / 100) * circumference;
+  const serviceDash = (servicePct / 100) * circumference;
+
+  return (
+    <div className="flex h-full flex-col justify-between rounded-3xl border border-[#E2E9E4] bg-white p-4.5 sm:p-5 shadow-2xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#F0F4F2] pb-3">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
+            <PieChart className="h-4 w-4" />
+          </div>
+          <div>
+            <h3 className="text-xs font-bold text-[#24342E]">
+              Request Distribution
+            </h3>
+            <p className="text-[10px] text-[#6F7D76]">
+              Blood emergencies vs. service bookings
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 rounded-xl bg-[#F6F8F6] p-1 border border-[#E2E9E4]">
+          <button
+            type="button"
+            onClick={() => setScope("all")}
+            className={`rounded-lg px-2.5 py-1 text-[10px] transition ${
+              scope === "all"
+                ? "bg-white text-[#24342E] shadow-2xs font-bold"
+                : "text-[#6F7D76] hover:text-[#24342E] font-medium"
+            }`}
+          >
+            All ({receivedRequests.length + sentRequests.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setScope("current")}
+            className={`rounded-lg px-2.5 py-1 text-[10px] transition ${
+              scope === "current"
+                ? "bg-white text-[#24342E] shadow-2xs font-bold"
+                : "text-[#6F7D76] hover:text-[#24342E] font-medium"
+            }`}
+          >
+            {activeTab === "received" ? "Incoming" : "Sent"} (
+            {activeTab === "received"
+              ? receivedRequests.length
+              : sentRequests.length}
+            )
+          </button>
+        </div>
+      </div>
+
+      <div className="mt-4 flex flex-col sm:flex-row items-center gap-5 sm:gap-6">
+        <div className="relative flex shrink-0 items-center justify-center">
+          <svg className="h-28 w-28 sm:h-32 sm:w-32" viewBox="0 0 100 100">
+            <circle
+              cx="50"
+              cy="50"
+              r={radius}
+              fill="transparent"
+              stroke="#F1F5F3"
+              strokeWidth="9"
+            />
+            {total === 0 ? (
+              <circle
+                cx="50"
+                cy="50"
+                r={radius}
+                fill="transparent"
+                stroke="#E2E9E4"
+                strokeWidth="9"
+                strokeDasharray="4 4"
+              />
+            ) : (
+              <>
+                {bloodCount > 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    fill="transparent"
+                    stroke="#C94C55"
+                    strokeWidth="9"
+                    strokeDasharray={`${bloodDash} ${circumference}`}
+                    strokeDashoffset={0}
+                    transform="rotate(-90 50 50)"
+                  />
+                )}
+                {serviceCount > 0 && (
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r={radius}
+                    fill="transparent"
+                    stroke="#4B78A8"
+                    strokeWidth="9"
+                    strokeDasharray={`${serviceDash} ${circumference}`}
+                    strokeDashoffset={-bloodDash}
+                    transform="rotate(-90 50 50)"
+                  />
+                )}
+              </>
+            )}
+            <text
+              x="50"
+              y="47"
+              textAnchor="middle"
+              className="text-base sm:text-lg font-black fill-[#24342E]"
+              dominantBaseline="middle"
+            >
+              {total}
+            </text>
+            <text
+              x="50"
+              y="61"
+              textAnchor="middle"
+              className="text-[8px] font-bold tracking-wider fill-[#7A8881]"
+              dominantBaseline="middle"
+            >
+              REQUESTS
+            </text>
+          </svg>
+        </div>
+
+        <div className="w-full flex-1 space-y-3">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 font-bold text-[#24342E]">
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#FBEAEC] text-[#C94C55]">
+                  <Droplets className="h-3 w-3" />
+                </span>
+                Blood Assistance
+              </span>
+              <span className="font-semibold text-[#6F7D76]">
+                <strong className="text-[#C94C55]">{bloodCount}</strong> ({bloodPct}%)
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[#F5F8F6]">
+              <div
+                className="h-full rounded-full bg-[#C94C55] transition-all duration-500"
+                style={{ width: `${bloodPct}%` }}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-xs">
+              <span className="flex items-center gap-1.5 font-bold text-[#24342E]">
+                <span className="flex h-5 w-5 items-center justify-center rounded-md bg-[#EAF1FA] text-[#4B78A8]">
+                  <Wrench className="h-3 w-3" />
+                </span>
+                Services Marketplace
+              </span>
+              <span className="font-semibold text-[#6F7D76]">
+                <strong className="text-[#4B78A8]">{serviceCount}</strong> ({servicePct}%)
+              </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-[#F5F8F6]">
+              <div
+                className="h-full rounded-full bg-[#4B78A8] transition-all duration-500"
+                style={{ width: `${servicePct}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function MyRequests() {
-  const [activeTab, setActiveTab] = useState("received"); // "received" | "sent"
+  const [activeTab, setActiveTab] = useState("received");
   const [sentRequests, setSentRequests] = useState([]);
   const [receivedRequests, setReceivedRequests] = useState([]);
 
@@ -251,48 +455,60 @@ export default function MyRequests() {
           </div>
         )}
 
-        {/* Summary Stat Chips */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF1FA] text-[#4B78A8]">
-              <ArrowDownLeft className="h-4 w-4" />
+        {/* Analytics & Request Distribution */}
+        <div className="mt-6 grid gap-4 lg:grid-cols-12 items-stretch">
+          {/* Quick Metrics (3 Stat Chips) */}
+          <div className="grid grid-cols-3 lg:grid-cols-1 gap-3 lg:col-span-4">
+            <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#EAF1FA] text-[#4B78A8]">
+                <ArrowDownLeft className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
+                  {receivedRequests.length}
+                </p>
+                <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
+                  Received
+                </p>
+              </div>
             </div>
-            <div>
-              <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
-                {receivedRequests.length}
-              </p>
-              <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
-                Received
-              </p>
+
+            <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
+                <ArrowUpRight className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
+                  {sentRequests.length}
+                </p>
+                <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
+                  Sent
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
+                <Clock3 className="h-4 w-4" />
+              </div>
+              <div>
+                <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
+                  {pendingCount}
+                </p>
+                <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
+                  Pending
+                </p>
+              </div>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
-              <ArrowUpRight className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
-                {sentRequests.length}
-              </p>
-              <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
-                Sent
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 rounded-2xl border border-[#E2E9E4] bg-white p-3.5 sm:p-4 shadow-2xs">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-600">
-              <Clock3 className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-lg font-bold text-[#24342E] sm:text-2xl leading-none">
-                {pendingCount}
-              </p>
-              <p className="mt-1 text-[11px] font-medium text-[#6F7D76]">
-                Pending
-              </p>
-            </div>
+          {/* Blood vs. Services Chart Card */}
+          <div className="lg:col-span-8">
+            <RequestDistributionChart
+              receivedRequests={receivedRequests}
+              sentRequests={sentRequests}
+              activeTab={activeTab}
+            />
           </div>
         </div>
 
