@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "motion/react";
 import {
   HeartHandshake,
   User,
@@ -17,13 +16,12 @@ import {
   Loader2,
   Clock,
   ShieldCheck,
-  Droplets,
-  Wrench,
-  Building2,
-  Sparkles
+  Sparkles,
+  Building2
 } from "lucide-react";
 import { registerUser, verifyEmailOTP, resendEmailOTP } from "../services/api";
 import { AnimatedSuccessCheck } from "../components/visuals/SuccessStateVisual";
+import ImageWithFallback from "../components/ui/ImageWithFallback";
 
 const initialForm = {
   name: "",
@@ -231,9 +229,9 @@ export default function Register() {
   };
 
   const stepLabels = [
-    { num: 1, title: "Account", sub: "Login info" },
-    { num: 2, title: "Details", sub: "Contact & city" },
-    { num: 3, title: "Verify", sub: "Email code" },
+    { num: 1, title: "Account" },
+    { num: 2, title: "Details" },
+    { num: 3, title: "Verify" },
   ];
 
   const passwordsMatch =
@@ -244,563 +242,536 @@ export default function Register() {
     formData.password !== formData.confirmPassword;
 
   return (
-    <main className="min-h-screen bg-[#F8FAF9] px-4 py-8 sm:px-6 lg:px-8 flex items-center justify-center">
-      <div className="w-full max-w-6xl">
-        {/* Top Brand Bar */}
-        <div className="mb-6 sm:mb-8 flex items-center justify-between">
-          <Link
-            to="/"
-            className="group inline-flex items-center gap-2.5 transition focus:outline-none"
-          >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65] shadow-2xs transition group-hover:scale-105 group-hover:bg-[#d8eadd]">
-              <HeartHandshake className="h-5 w-5" />
+    <main className="min-h-screen bg-[#F8FAF9] flex items-stretch">
+      <div className="w-full grid lg:grid-cols-12 min-h-screen">
+        
+        {/* =========================================================
+            LEFT COLUMN: FULL-HEIGHT PHOTOGRAPHIC STORY
+        ========================================================= */}
+        <div className="hidden lg:relative lg:col-span-5 xl:col-span-6 lg:flex flex-col justify-between overflow-hidden bg-[#1B2822] p-10 xl:p-14 text-white">
+          <div className="absolute inset-0">
+            <ImageWithFallback
+              src="/images/cta/cta-community.jpg"
+              alt="Neighbors joining hands in solidarity"
+              priority
+              aspectClassName="h-full w-full"
+              className="h-full w-full object-cover"
+              overlay
+              overlayClassName="bg-gradient-to-t from-[#141E1A] via-[#1B2822]/75 to-[#1B2822]/85"
+            />
+          </div>
+
+          {/* Top Brand Link */}
+          <div className="relative z-10">
+            <Link to="/" className="inline-flex items-center gap-2.5 group">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-md text-white border border-white/20 transition group-hover:scale-105">
+                <HeartHandshake className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base font-bold tracking-tight text-white">
+                  CommunityConnect
+                </span>
+                <span className="text-[10px] text-white/70">
+                  Peer Network & Local Aid
+                </span>
+              </div>
+            </Link>
+          </div>
+
+          {/* Center Story */}
+          <div className="relative z-10 space-y-6 max-w-lg">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 backdrop-blur-md border border-white/15 px-3 py-1 text-xs font-semibold text-[#8AD4B2]">
+              <Sparkles className="h-3.5 w-3.5" />
+              <span>Free Community Membership</span>
             </div>
-            <div className="flex flex-col">
-              <span className="text-base font-bold tracking-tight text-[#24342E]">
-                CommunityConnect
-              </span>
-              <span className="text-[10px] font-medium text-[#6F7D76]">
-                Peer Network & Local Aid
-              </span>
-            </div>
-          </Link>
 
-          <Link
-            to="/login"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-semibold text-[#427A65] hover:text-[#356651] transition"
-          >
-            <span>Already have an account?</span>
-            <span className="underline underline-offset-4">Sign in</span>
-            <ArrowRight className="h-3.5 w-3.5" />
-          </Link>
-        </div>
+            <h1 className="text-3xl xl:text-4xl font-extrabold tracking-tight text-white leading-tight">
+              Join a community that <br />
+              <span className="text-[#8AD4B2]">takes care of each other.</span>
+            </h1>
 
-        {/* Main Two-Section Grid */}
-        <div className="grid items-center gap-8 lg:grid-cols-12 lg:gap-12">
-          {/* LEFT SIDE: Brand Narrative & Community Trust Values */}
-          <div className="lg:col-span-6 space-y-6">
-            <motion.div
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
-              className="space-y-4"
-            >
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#CFE2D6] bg-[#E5F1EA]/80 px-3 py-1 text-xs font-semibold text-[#356651]">
-                <Sparkles className="h-3.5 w-3.5 text-[#427A65]" />
-                <span>Join our neighbor-to-neighbor movement</span>
+            <p className="text-sm text-white/80 leading-relaxed">
+              Create your account in 30 seconds. Connect directly with verified donors, hospital reserves, and local service providers in your neighborhood.
+            </p>
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-3 text-xs text-white/90">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[#8AD4B2]">
+                  <CheckCircle2 className="h-4 w-4" />
+                </div>
+                <span>Free forever · Zero middleman commissions</span>
               </div>
 
-              <h1 className="text-3xl font-extrabold tracking-tight text-[#24342E] sm:text-4xl lg:text-[40px] lg:leading-[1.15]">
-                Join a community that takes care of each other.
-              </h1>
-
-              <p className="max-w-xl text-sm leading-relaxed text-[#6F7D76]">
-                Register your free account in less than a minute. Whether you want to volunteer as a blood donor, request emergency units, or find trusted local service providers, you are in safe hands.
-              </p>
-            </motion.div>
-
-            {/* Feature Cards Grid */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.45, delay: 0.1 }}
-              className="grid gap-3 sm:grid-cols-2"
-            >
-              <div className="rounded-2xl border border-[#E2E9E4] bg-white p-4 shadow-2xs">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#FBEAEC] text-[#C94C55]">
-                  <Droplets className="h-4 w-4" />
+              <div className="flex items-center gap-3 text-xs text-white/90">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[#8AD4B2]">
+                  <CheckCircle2 className="h-4 w-4" />
                 </div>
-                <h3 className="mt-2.5 text-xs font-bold text-[#24342E]">
-                  Rapid Emergency Match
-                </h3>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#6F7D76]">
-                  Get connected directly when someone nearby needs your blood group in emergencies.
-                </p>
+                <span>Privacy-first · Contact shared only upon mutual request acceptance</span>
               </div>
 
-              <div className="rounded-2xl border border-[#E2E9E4] bg-white p-4 shadow-2xs">
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#EAF1FA] text-[#4B78A8]">
-                  <Wrench className="h-4 w-4" />
+              <div className="flex items-center gap-3 text-xs text-white/90">
+                <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-[#8AD4B2]">
+                  <CheckCircle2 className="h-4 w-4" />
                 </div>
-                <h3 className="mt-2.5 text-xs font-bold text-[#24342E]">
-                  Transparent Services
-                </h3>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#6F7D76]">
-                  Offer or discover local home food, cleaning, assistance, and skilled neighborhood help.
-                </p>
+                <span>Fast emergency blood matching across city centers</span>
               </div>
-            </motion.div>
-
-            {/* Trust Point */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.15 }}
-              className="rounded-2xl border border-[#E2E9E4] bg-gradient-to-br from-white to-[#F8FAF9] p-4 text-xs shadow-2xs"
-            >
-              <div className="flex items-start gap-3">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#E5F1EA] text-[#427A65]">
-                  <ShieldCheck className="h-4 w-4" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-[#24342E]">
-                    Your Privacy is Safeguarded
-                  </h4>
-                  <p className="mt-0.5 text-[11px] text-[#6F7D76]">
-                    Your personal phone number is never shown publicly on the directory. Communication happens strictly through verified mutual requests.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* Organization Link */}
-            <div className="pt-1 flex items-center gap-2 text-xs text-[#6F7D76]">
-              <Building2 className="h-4 w-4 text-[#4B78A8]" />
-              <span>Are you a registered Blood Bank or Hospital?</span>
-              <Link
-                to="/private/register"
-                className="font-bold text-[#4B78A8] hover:underline inline-flex items-center gap-1"
-              >
-                Register as Organization
-                <ArrowRight className="h-3 w-3" />
-              </Link>
             </div>
           </div>
 
-          {/* RIGHT SIDE: Multi-Step Registration Card */}
-          <div className="lg:col-span-6 flex justify-center lg:justify-end">
-            <motion.div
-              initial={{ opacity: 0, y: 12, scale: 0.99 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.4 }}
-              className="w-full max-w-md rounded-3xl border border-[#E2E9E4] bg-white p-7 sm:p-9 shadow-xs"
-            >
-              {/* Step Indicator Header */}
-              <div className="mb-6 border-b border-[#EEF2EF] pb-4">
-                <div className="flex items-center justify-between">
-                  {stepLabels.map((item) => {
-                    const isPassed = step > item.num;
-                    const isCurrent = step === item.num;
+          {/* Bottom Trust Badge */}
+          <div className="relative z-10 flex items-center gap-2 text-xs text-white/70 pt-4 border-t border-white/10">
+            <ShieldCheck className="h-4 w-4 text-[#8AD4B2]" />
+            <span>Encrypted credentials · Safe community protocol</span>
+          </div>
+        </div>
 
-                    return (
-                      <div
-                        key={item.num}
-                        className={`flex items-center gap-2 ${
-                          isCurrent
-                            ? "opacity-100"
-                            : isPassed
-                            ? "opacity-90"
-                            : "opacity-40"
-                        }`}
-                      >
-                        <div
-                          className={`flex h-7 w-7 items-center justify-center rounded-xl text-xs font-bold transition ${
-                            isPassed
-                              ? "bg-[#427A65] text-white"
-                              : isCurrent
-                              ? "bg-[#E5F1EA] text-[#427A65] ring-2 ring-[#427A65]/20"
-                              : "bg-slate-100 text-slate-500"
-                          }`}
-                        >
-                          {isPassed ? "✓" : item.num}
-                        </div>
-                        <div className="hidden sm:block text-left">
-                          <p className="text-[11px] font-bold text-[#24342E] leading-tight">
-                            {item.title}
-                          </p>
-                          <p className="text-[9px] text-[#6F7D76]">
-                            {item.sub}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+        {/* =========================================================
+            RIGHT COLUMN: STEP-BY-STEP SIGN-UP CARD
+        ========================================================= */}
+        <div className="lg:col-span-7 xl:col-span-6 flex flex-col justify-between p-6 sm:p-10 lg:p-12 xl:p-16">
+          
+          {/* Top Header */}
+          <div className="flex items-center justify-between lg:justify-end mb-6">
+            <Link to="/" className="lg:hidden inline-flex items-center gap-2">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#E5F1EA] text-[#427A65]">
+                <HeartHandshake className="h-5 w-5" />
               </div>
+              <span className="text-sm font-bold text-[#24342E]">CommunityConnect</span>
+            </Link>
 
-              {/* Title & Subtitle */}
-              <div className="mb-5">
-                <span className="inline-flex items-center gap-1 rounded-md bg-[#E5F1EA] px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[#356651]">
-                  Step {step} of 3
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#427A65] hover:text-[#356651] transition"
+            >
+              <span>Already have an account?</span>
+              <span className="underline underline-offset-4">Sign in</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          {/* Form Container */}
+          <div className="mx-auto w-full max-w-md my-auto">
+            {/* Mobile Visual Banner (renders only on < lg) */}
+            <div className="lg:hidden relative w-full h-40 sm:h-48 overflow-hidden rounded-2xl sm:rounded-3xl shadow-sm mb-6">
+              <ImageWithFallback
+                src="/images/cta/cta-community.jpg"
+                alt="Community volunteers uniting"
+                aspectClassName="h-full w-full"
+                className="h-full w-full object-cover"
+                overlay
+                overlayClassName="bg-gradient-to-t from-[#141E1A] via-[#1B2822]/65 to-[#1B2822]/80"
+              />
+              <div className="absolute inset-0 p-4 sm:p-5 flex flex-col justify-end text-white">
+                <span className="inline-block rounded-full bg-white/20 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white w-max mb-1">
+                  Public Registration
                 </span>
-                <h2 className="mt-2 text-2xl font-bold tracking-tight text-[#24342E]">
-                  {step === 1 && "Create your account"}
-                  {step === 2 && "Contact & location"}
-                  {step === 3 && "Verify your email"}
-                </h2>
-                <p className="mt-1 text-xs text-[#6F7D76]">
-                  {step === 1 && "Start by providing your name, email, and password."}
-                  {step === 2 && "Help neighbors reach you for emergency or service requests."}
-                  {step === 3 && `Enter the 6-digit code sent to ${verificationEmail}`}
+                <p className="text-base sm:text-lg font-bold leading-tight">
+                  Join a community that takes care of each other.
                 </p>
               </div>
+            </div>
 
-              {/* Success Notification */}
-              {successMessage && (
-                <div
-                  role="status"
-                  className="mb-4 flex items-start gap-2.5 rounded-2xl border border-[#D5E7DB] bg-[#EDF7EF] p-3.5 text-xs font-medium text-[#356651]"
-                >
-                  <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[#427A65]" />
-                  <span>{successMessage}</span>
-                </div>
-              )}
-
-              {/* Error Notification */}
-              {error && (
-                <div
-                  role="alert"
-                  className="mb-4 flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-medium text-rose-700"
-                >
-                  <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {/* STEP 1: Name, Email & Password */}
-              {step === 1 && (
-                <form onSubmit={handleNextToStep2} className="space-y-4">
-                  {/* Full Name */}
-                  <div>
-                    <label
-                      htmlFor="name"
-                      className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
+            {/* Step Wizard Header */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between border-b border-[#EEF2EF] pb-4 mb-4">
+                {stepLabels.map((s, idx) => (
+                  <div key={s.num} className="flex items-center gap-2">
+                    <div
+                      className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition ${
+                        step === s.num
+                          ? "bg-[#427A65] text-white shadow-2xs"
+                          : step > s.num
+                          ? "bg-[#E5F1EA] text-[#427A65]"
+                          : "bg-[#F8FAF9] text-[#8C9892] border border-[#E2E9E4]"
+                      }`}
                     >
-                      Full Name
-                    </label>
-                    <div className="relative">
-                      <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
-                      <input
-                        id="name"
-                        name="name"
-                        type="text"
-                        value={formData.name}
-                        onChange={handleChange}
-                        placeholder="Jane Doe"
-                        autoComplete="name"
-                        required
-                        className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:bg-white focus:ring-4 focus:ring-[#427A65]/10"
-                      />
+                      {step > s.num ? "✓" : s.num}
                     </div>
-                  </div>
-
-                  {/* Email */}
-                  <div>
-                    <label
-                      htmlFor="email"
-                      className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
+                    <span
+                      className={`text-xs font-semibold ${
+                        step === s.num ? "text-[#24342E]" : "text-[#8C9892]"
+                      }`}
                     >
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
-                      <input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        placeholder="you@example.com"
-                        autoComplete="email"
-                        required
-                        className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:bg-white focus:ring-4 focus:ring-[#427A65]/10"
-                      />
-                    </div>
+                      {s.title}
+                    </span>
+                    {idx < stepLabels.length - 1 && (
+                      <span className="text-[#D3DED7] mx-1">·</span>
+                    )}
                   </div>
+                ))}
+              </div>
 
-                  {/* Password & Confirm Password */}
-                  <div className="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
-                    <div>
-                      <label
-                        htmlFor="password"
-                        className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
-                      >
-                        Password
-                      </label>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8C9892]" />
-                        <input
-                          id="password"
-                          name="password"
-                          type={showPassword ? "text" : "password"}
-                          value={formData.password}
-                          onChange={handleChange}
-                          placeholder="8+ chars"
-                          autoComplete="new-password"
-                          required
-                          className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-9 pr-8 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:bg-white focus:ring-4 focus:ring-[#427A65]/10"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword((p) => !p)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C9892] hover:text-[#24342E]"
-                          aria-label={showPassword ? "Hide password" : "Show password"}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-3.5 w-3.5" />
-                          ) : (
-                            <Eye className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
+              <span className="inline-flex items-center gap-1 rounded-md bg-[#E5F1EA] px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wider text-[#356651]">
+                Public Registration
+              </span>
+              <h2 className="mt-2 text-2xl sm:text-3xl font-extrabold tracking-tight text-[#24342E]">
+                {step === 1 && "Create your account"}
+                {step === 2 && "Personal details"}
+                {step === 3 && "Verify your email"}
+              </h2>
+              <p className="mt-1 text-xs text-[#6F7D76]">
+                {step === 1 && "Enter your basic account login credentials."}
+                {step === 2 && "Tell us your contact number and locality."}
+                {step === 3 && `Enter the 6-digit code sent to ${verificationEmail}.`}
+              </p>
+            </div>
 
-                    <div>
-                      <div className="mb-1.5 flex items-center justify-between">
-                        <label
-                          htmlFor="confirmPassword"
-                          className="block text-xs font-semibold text-[#6F7D76]"
-                        >
-                          Confirm
-                        </label>
-                        {passwordsMatch && (
-                          <span className="text-[10px] font-bold text-emerald-600">
-                            Match ✓
-                          </span>
-                        )}
-                        {passwordsMismatch && (
-                          <span className="text-[10px] font-bold text-rose-500">
-                            Mismatch
-                          </span>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <Lock className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#8C9892]" />
-                        <input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type={showConfirmPassword ? "text" : "password"}
-                          value={formData.confirmPassword}
-                          onChange={handleChange}
-                          placeholder="Repeat"
-                          autoComplete="new-password"
-                          required
-                          className={`h-12 w-full rounded-2xl border bg-[#FBFCFB] pl-9 pr-8 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:bg-white focus:ring-4 ${
-                            passwordsMismatch
-                              ? "border-rose-300 focus:border-rose-500 focus:ring-rose-500/10"
-                              : "border-[#E2E9E4] focus:border-[#427A65] focus:ring-[#427A65]/10"
-                          }`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword((p) => !p)}
-                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#8C9892] hover:text-[#24342E]"
-                          aria-label={showConfirmPassword ? "Hide password" : "Show password"}
-                        >
-                          {showConfirmPassword ? (
-                            <EyeOff className="h-3.5 w-3.5" />
-                          ) : (
-                            <Eye className="h-3.5 w-3.5" />
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+            {/* Error Notification */}
+            {error && (
+              <div
+                role="alert"
+                className="mb-5 flex items-start gap-2.5 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-medium text-rose-700"
+              >
+                <AlertCircle className="h-4 w-4 shrink-0 mt-0.5 text-rose-600" />
+                <span>{error}</span>
+              </div>
+            )}
 
-                  {/* Next Button */}
-                  <button
-                    type="submit"
-                    className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#427A65] text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651] active:scale-[0.99]"
+            {/* Success Notification */}
+            {successMessage && (
+              <div
+                role="status"
+                className="mb-5 flex items-start gap-2.5 rounded-2xl border border-[#D5E7DB] bg-[#EDF7EF] p-3.5 text-xs font-medium text-[#356651]"
+              >
+                <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5 text-[#427A65]" />
+                <span>{successMessage}</span>
+              </div>
+            )}
+
+            {/* =======================================================
+                STEP 1: ACCOUNT CREDENTIALS
+            ======================================================= */}
+            {step === 1 && (
+              <form onSubmit={handleNextToStep2} className="space-y-4">
+                {/* Full Name */}
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
                   >
-                    <span>Continue to Contact Info</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                </form>
-              )}
-
-              {/* STEP 2: Phone & Location */}
-              {step === 2 && (
-                <form onSubmit={handleFinalSubmit} className="space-y-4">
-                  {/* Phone */}
-                  <div>
-                    <label
-                      htmlFor="phone"
-                      className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
-                    >
-                      Phone Number
-                    </label>
-                    <div className="relative">
-                      <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
-                      <input
-                        id="phone"
-                        name="phone"
-                        type="tel"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        placeholder="+91 98765 43210"
-                        autoComplete="tel"
-                        required
-                        className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:bg-white focus:ring-4 focus:ring-[#427A65]/10"
-                      />
-                    </div>
-                    <p className="mt-1 text-[11px] text-[#8C9892]">
-                      Used for connection request alerts. Kept private until you approve.
-                    </p>
+                    Full Name
+                  </label>
+                  <div className="relative">
+                    <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
+                    <input
+                      id="name"
+                      name="name"
+                      type="text"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="e.g. Rahul Sharma"
+                      autoComplete="name"
+                      required
+                      className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-white pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:ring-4 focus:ring-[#427A65]/10"
+                    />
                   </div>
+                </div>
 
-                  {/* Location */}
-                  <div>
-                    <label
-                      htmlFor="location"
-                      className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
-                    >
-                      Neighborhood, City, or PIN
-                    </label>
-                    <div className="relative">
-                      <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
-                      <input
-                        id="location"
-                        name="location"
-                        type="text"
-                        value={formData.location}
-                        onChange={handleChange}
-                        placeholder="e.g. Akurdi, Pune"
-                        required
-                        className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:bg-white focus:ring-4 focus:ring-[#427A65]/10"
-                      />
-                    </div>
-                    <p className="mt-1 text-[11px] text-[#8C9892]">
-                      Helps match you with nearby blood emergencies and local services.
-                    </p>
+                {/* Email Address */}
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
+                    <input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      required
+                      className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-white pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:ring-4 focus:ring-[#427A65]/10"
+                    />
                   </div>
+                </div>
 
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-2">
+                {/* Password */}
+                <div>
+                  <label
+                    htmlFor="password"
+                    className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
+                  >
+                    Password (min. 8 characters)
+                  </label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
+                    <input
+                      id="password"
+                      name="password"
+                      type={showPassword ? "text" : "password"}
+                      value={formData.password}
+                      onChange={handleChange}
+                      placeholder="Create a strong password"
+                      autoComplete="new-password"
+                      required
+                      className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-white pl-10 pr-11 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:ring-4 focus:ring-[#427A65]/10"
+                    />
                     <button
                       type="button"
-                      onClick={() => setStep(1)}
-                      className="inline-flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-[#E2E9E4] bg-white px-4 text-xs font-semibold text-[#6F7D76] hover:bg-[#F5F8F6] transition"
+                      onClick={() => setShowPassword((p) => !p)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C9892] transition hover:text-[#24342E] focus:outline-none"
                     >
-                      <ArrowLeft className="h-4 w-4" />
-                      <span>Back</span>
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label
+                    htmlFor="confirmPassword"
+                    className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
+                  >
+                    Confirm Password
+                  </label>
+                  <div className="relative">
+                    <Lock className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
+                    <input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      placeholder="Repeat your password"
+                      autoComplete="new-password"
+                      required
+                      className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-white pl-10 pr-11 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:ring-4 focus:ring-[#427A65]/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((p) => !p)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C9892] transition hover:text-[#24342E] focus:outline-none"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {passwordsMatch && (
+                    <p className="mt-1 text-[11px] text-emerald-600 flex items-center gap-1 font-medium">
+                      <CheckCircle2 className="h-3 w-3" /> Passwords match
+                    </p>
+                  )}
+                  {passwordsMismatch && (
+                    <p className="mt-1 text-[11px] text-rose-600 flex items-center gap-1 font-medium">
+                      <AlertCircle className="h-3 w-3" /> Passwords do not match
+                    </p>
+                  )}
+                </div>
+
+                {/* Continue to Step 2 */}
+                <button
+                  type="submit"
+                  className="mt-2 inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#427A65] text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651] active:scale-[0.99]"
+                >
+                  <span>Continue to Details</span>
+                  <ArrowRight className="h-4 w-4" />
+                </button>
+              </form>
+            )}
+
+            {/* =======================================================
+                STEP 2: CONTACT & LOCATION DETAILS
+            ======================================================= */}
+            {step === 2 && (
+              <form onSubmit={handleFinalSubmit} className="space-y-4">
+                {/* Phone Number */}
+                <div>
+                  <label
+                    htmlFor="phone"
+                    className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
+                  >
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
+                    <input
+                      id="phone"
+                      name="phone"
+                      type="tel"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+91 98765 43210"
+                      autoComplete="tel"
+                      required
+                      className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-white pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:ring-4 focus:ring-[#427A65]/10"
+                    />
+                  </div>
+                  <p className="mt-1 text-[10px] text-[#8C9892]">
+                    Only shared when you accept a mutual assistance request.
+                  </p>
+                </div>
+
+                {/* Locality / City */}
+                <div>
+                  <label
+                    htmlFor="location"
+                    className="mb-1.5 block text-xs font-semibold text-[#6F7D76]"
+                  >
+                    Locality & City
+                  </label>
+                  <div className="relative">
+                    <MapPin className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8C9892]" />
+                    <input
+                      id="location"
+                      name="location"
+                      type="text"
+                      value={formData.location}
+                      onChange={handleChange}
+                      placeholder="e.g. Akurdi, Pune"
+                      autoComplete="address-level2"
+                      required
+                      className="h-12 w-full rounded-2xl border border-[#E2E9E4] bg-white pl-10 pr-4 text-xs text-[#24342E] outline-none transition placeholder:text-[#9EA8A3] focus:border-[#427A65] focus:ring-4 focus:ring-[#427A65]/10"
+                    />
+                  </div>
+                </div>
+
+                {/* Buttons: Back and Register */}
+                <div className="flex items-center gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setError("");
+                      setStep(1);
+                    }}
+                    className="inline-flex h-12 items-center justify-center gap-1.5 rounded-2xl border border-[#E2E9E4] bg-white px-5 text-xs font-semibold text-[#6F7D76] hover:bg-[#F8FAF9] transition"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back</span>
+                  </button>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#427A65] text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Creating Account...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Complete Registration</span>
+                        <ArrowRight className="h-4 w-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {/* =======================================================
+                STEP 3: EMAIL OTP VERIFICATION
+            ======================================================= */}
+            {step === 3 && (
+              <form onSubmit={handleVerifyOTP} className="space-y-4">
+                {verifiedSuccess ? (
+                  <div className="py-6 flex flex-col items-center justify-center space-y-3">
+                    <AnimatedSuccessCheck size={60} />
+                    <p className="text-sm font-bold text-[#24342E]">Email Verified!</p>
+                    <p className="text-xs text-[#6F7D76]">Redirecting you to sign in...</p>
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <div className="flex items-center justify-between mb-1.5">
+                        <label
+                          htmlFor="otp"
+                          className="block text-xs font-semibold text-[#6F7D76]"
+                        >
+                          6-Digit Code
+                        </label>
+                        <span className="text-xs font-mono text-[#8C9892] flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatTime(otpTimeLeft)}
+                        </span>
+                      </div>
+                      <input
+                        id="otp"
+                        type="text"
+                        maxLength={6}
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+                        placeholder="123456"
+                        autoComplete="one-time-code"
+                        autoFocus
+                        required
+                        className="h-12 w-full text-center text-xl font-mono tracking-[0.4em] font-bold rounded-2xl border border-[#E2E9E4] bg-white text-[#24342E] outline-none transition placeholder:text-[#D3DED7] focus:border-[#427A65] focus:ring-4 focus:ring-[#427A65]/10"
+                      />
+                    </div>
 
                     <button
                       type="submit"
-                      disabled={loading}
-                      className="inline-flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#427A65] text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                      disabled={loading || otp.length !== 6}
+                      className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#427A65] text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
                     >
                       {loading ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin" />
-                          <span>Creating account...</span>
+                          <span>Verifying...</span>
                         </>
                       ) : (
                         <>
-                          <span>Complete Registration</span>
-                          <ArrowRight className="h-4 w-4" />
+                          <span>Verify & Continue</span>
+                          <CheckCircle2 className="h-4 w-4" />
                         </>
                       )}
                     </button>
-                  </div>
-                </form>
-              )}
 
-              {/* STEP 3: OTP Verification */}
-              {step === 3 && (
-                <div>
-                  {verifiedSuccess ? (
-                    <AnimatedSuccessCheck
-                      title="Email Verified!"
-                      subtitle="Redirecting to sign in..."
-                    />
-                  ) : (
-                    <form onSubmit={handleVerifyOTP} className="space-y-4">
-                      <div className="rounded-2xl border border-[#E2E9E4] bg-[#F8FAF9] p-4 text-center">
-                        <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65] shadow-2xs">
-                          <Mail className="h-5 w-5" />
-                        </div>
-                        <h3 className="mt-2 text-sm font-bold text-[#24342E]">
-                          Check your email
-                        </h3>
-                        <p className="mt-1 text-xs text-[#6F7D76]">
-                          We've sent a 6-digit confirmation code to:
-                        </p>
-                        <p className="mt-0.5 text-xs font-bold text-[#24342E]">
-                          {verificationEmail}
-                        </p>
-                      </div>
-
-                      <div>
-                        <label
-                          htmlFor="otp"
-                          className="mb-1.5 block text-xs font-semibold text-[#6F7D76] text-center"
-                        >
-                          Enter 6-Digit Code
-                        </label>
-                        <input
-                          id="otp"
-                          name="otp"
-                          type="text"
-                          inputMode="numeric"
-                          maxLength={6}
-                          value={otp}
-                          onChange={(e) =>
-                            setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-                          }
-                          placeholder="••••••"
-                          autoFocus
-                          className="h-14 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] text-center font-mono text-2xl font-bold tracking-[0.5em] text-[#24342E] outline-none transition focus:border-[#427A65] focus:bg-white focus:ring-4 focus:ring-[#427A65]/10"
-                        />
-
-                        <div className="mt-2.5 flex items-center justify-between text-xs text-[#7A8881]">
-                          <span className="inline-flex items-center gap-1">
-                            <Clock className="h-3.5 w-3.5" />
-                            Expires in {formatTime(otpTimeLeft)}
-                          </span>
-
-                          <button
-                            type="button"
-                            onClick={handleResendOTP}
-                            disabled={resendLoading || resendTimeLeft > 0}
-                            className="font-semibold text-[#427A65] hover:text-[#356651] hover:underline disabled:opacity-50"
-                          >
-                            {resendLoading
-                              ? "Sending..."
-                              : resendTimeLeft > 0
-                              ? `Resend in ${resendTimeLeft}s`
-                              : "Resend Code"}
-                          </button>
-                        </div>
-                      </div>
-
+                    <div className="text-center pt-2">
                       <button
-                        type="submit"
-                        disabled={loading || otp.length !== 6 || otpTimeLeft <= 0}
-                        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-[#427A65] text-xs font-semibold text-white shadow-xs transition hover:bg-[#356651] active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
+                        type="button"
+                        onClick={handleResendOTP}
+                        disabled={resendLoading || resendTimeLeft > 0}
+                        className="text-xs font-semibold text-[#427A65] hover:underline disabled:text-[#8C9892] disabled:no-underline"
                       >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                            <span>Verifying code...</span>
-                          </>
-                        ) : (
-                          <>
-                            <span>Verify Email & Continue</span>
-                            <ArrowRight className="h-4 w-4" />
-                          </>
-                        )}
+                        {resendLoading
+                          ? "Resending..."
+                          : resendTimeLeft > 0
+                          ? `Resend code in ${resendTimeLeft}s`
+                          : "Resend verification code"}
                       </button>
-                    </form>
-                  )}
-                </div>
-              )}
+                    </div>
+                  </>
+                )}
+              </form>
+            )}
 
-              {/* Card Footer: Sign In Link */}
-              {step !== 3 && (
-                <div className="mt-6 border-t border-[#EEF2EF] pt-5 text-center text-xs text-[#6F7D76]">
-                  <span>Already registered? </span>
-                  <Link
-                    to="/login"
-                    className="font-bold text-[#427A65] hover:text-[#356651] hover:underline"
-                  >
-                    Sign In
-                  </Link>
-                </div>
-              )}
-            </motion.div>
+            {/* Switch to Login */}
+            <div className="mt-6 border-t border-[#EEF2EF] pt-5 text-center text-xs text-[#6F7D76]">
+              <span>Already have an account? </span>
+              <Link
+                to="/login"
+                className="font-bold text-[#427A65] hover:text-[#356651] hover:underline"
+              >
+                Sign In
+              </Link>
+            </div>
+
+            {/* Organization / Admin Portal Quick Switch */}
+            <div className="mt-5 rounded-2xl bg-white border border-[#E2E9E4] p-3 text-center text-xs text-[#6F7D76] flex items-center justify-center gap-2">
+              <Building2 className="h-3.5 w-3.5 text-[#4B78A8]" />
+              <span>Registering an organization?</span>
+              <Link
+                to="/private/register"
+                className="font-bold text-[#4B78A8] hover:underline"
+              >
+                Hospital / Blood Bank Portal
+              </Link>
+            </div>
+          </div>
+
+          {/* Bottom Copyright */}
+          <div className="mt-6 text-center text-[11px] text-[#8C9892]">
+            © {new Date().getFullYear()} CommunityConnect. All rights reserved.
           </div>
         </div>
+
       </div>
     </main>
   );

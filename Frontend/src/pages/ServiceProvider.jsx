@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import {
   MapPin,
-  ShieldCheck,
   AlertCircle,
   Loader2,
   Sparkles,
-  Radio,
-  ArrowRight,
   CheckCircle2,
+  Wrench,
+  Clock,
+  HeartHandshake,
+  DollarSign
 } from "lucide-react";
 import {
   registerServiceProvider,
@@ -15,8 +16,7 @@ import {
   toggleProviderAvailability,
   getProfile,
 } from "../services/api";
-import { ServiceCategoryBadge } from "../components/visuals/ServiceVisual";
-import { renderServiceIcon } from "../components/visuals/serviceIcons";
+import ImageWithFallback from "../components/ui/ImageWithFallback";
 
 const serviceTypes = [
   "Homemade food",
@@ -36,7 +36,7 @@ const serviceTypes = [
   "Other community services",
 ];
 
-const rateTypes = ["Hourly", "Daily", "Monthly"];
+const rateTypes = ["Hourly", "Daily", "Monthly", "Fixed"];
 
 export default function ServiceProvider() {
   const [formData, setFormData] = useState({
@@ -98,10 +98,10 @@ export default function ServiceProvider() {
   }, []);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      [name]: type === "checkbox" ? checked : value,
     }));
     setError("");
     setMessage("");
@@ -114,10 +114,10 @@ export default function ServiceProvider() {
       const res = await toggleProviderAvailability();
       setExistingProvider(res.provider);
       setFormData((prev) => ({ ...prev, availability: res.provider.availability }));
-      setMessage(res.message);
-      setTimeout(() => setMessage(""), 3000);
+      setMessage(res.message || "Availability status updated.");
+      setTimeout(() => setMessage(""), 4000);
     } catch (err) {
-      setError(err?.response?.data?.message || "Failed to toggle availability.");
+      setError(err.response?.data?.message || "Failed to update availability.");
     } finally {
       setToggling(false);
     }
@@ -125,32 +125,30 @@ export default function ServiceProvider() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    setMessage("");
-
-    if (!formData.serviceType || !formData.location.trim()) {
-      setError("Please select a community service and enter location.");
+    if (!formData.serviceType) {
+      setError("Please select a service category.");
+      return;
+    }
+    if (!formData.location.trim()) {
+      setError("Please specify your primary service location.");
+      return;
+    }
+    if (!formData.description.trim()) {
+      setError("Please provide a brief description of your capabilities.");
       return;
     }
 
     setRegistering(true);
+    setError("");
+    setMessage("");
 
     try {
-      const response = await registerServiceProvider({
-        serviceType: formData.serviceType,
-        location: formData.location.trim(),
-        availability: formData.availability,
-        rateType: formData.rateType,
-        description: formData.description.trim(),
-      });
-
-      setExistingProvider(response.provider);
-      setMessage(response.message || "Community provider profile active.");
-      setTimeout(() => setMessage(""), 4000);
+      const res = await registerServiceProvider(formData);
+      setExistingProvider(res.provider);
+      setMessage(res.message || "Service profile published successfully! Neighbors can now reach you.");
+      setTimeout(() => setMessage(""), 5000);
     } catch (err) {
-      setError(
-        err.response?.data?.message || "Failed to register as community provider."
-      );
+      setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
       setRegistering(false);
     }
@@ -158,295 +156,255 @@ export default function ServiceProvider() {
 
   if (loading) {
     return (
-      <div className="flex min-h-[40vh] items-center justify-center bg-[#F8FAF9]">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-7 w-7 animate-spin text-[#4B78A8]" />
-          <span className="text-xs text-[#6F7D76]">Loading provider profile...</span>
+      <div className="flex min-h-[60vh] items-center justify-center bg-[#F8FAF9]">
+        <div className="flex flex-col items-center gap-3 text-xs text-[#6F7D76]">
+          <Loader2 className="h-8 w-8 animate-spin text-[#4B78A8]" />
+          <span>Loading provider profile...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#F8FAF9] px-4 py-6 sm:px-6 sm:py-10">
-      <div className="mx-auto max-w-4xl space-y-6">
-        {/* Header Hero */}
-        <section className="relative overflow-hidden rounded-3xl border border-[#D8E4F2] bg-gradient-to-br from-white via-[#F7FAFD] to-[#EAF1FA] p-6 shadow-xs sm:p-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border border-[#D3E2F4] bg-white px-3 py-1 text-xs font-semibold uppercase tracking-wider text-[#4B78A8]">
+    <div className="min-h-screen bg-[#F8FAF9] text-[#24342E]">
+      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-12 sm:space-y-16">
+        
+        {/* =========================================================
+            1. HERO: HAVE A SKILL? HELP SOMEONE NEARBY
+        ========================================================= */}
+        <section className="relative overflow-hidden rounded-[2.5rem] border border-[#D8E4F2] aspect-16/9 sm:aspect-21/8 shadow-md">
+          <ImageWithFallback
+            src="/images/services/service-provider-hero.jpg"
+            alt="Dedicated local skilled helpers and technicians"
+            priority
+            aspectClassName="h-full w-full"
+            overlay
+            overlayClassName="bg-gradient-to-r from-black/85 via-black/60 to-black/75"
+          >
+            <div className="max-w-2xl text-white space-y-3 p-3 sm:p-6">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#4B78A8] px-3 py-1 text-xs font-bold text-white uppercase tracking-wider">
                 <Sparkles className="h-3.5 w-3.5" />
-                Community Help Registry
-              </div>
+                Community Skill Network
+              </span>
 
-              <h1 className="text-3xl font-bold tracking-tight text-[#24342E] sm:text-4xl">
-                Provide Community Service
+              <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+                Have a skill? Help someone nearby.
               </h1>
-              <p className="mt-2 text-sm text-[#6F7D76]">
-                Offer homemade food, cleaning, helper assistance, and practical skills directly to your neighborhood.
+
+              <p className="text-xs sm:text-sm text-white/80 leading-relaxed max-w-lg">
+                Whether you're an electrician, home cook, cleaner, tutor, or handy neighbor, join CommunityConnect to connect directly with nearby households.
               </p>
             </div>
+          </ImageWithFallback>
+        </section>
 
-            <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-3xl border border-[#D3E2F4] bg-white text-[#4B78A8] shadow-xs">
-              {renderServiceIcon(formData.serviceType, "h-8 w-8 sm:h-10 sm:w-10")}
+        {/* =========================================================
+            2. WHY PROVIDE WITH COMMUNITYCONNECT
+        ========================================================= */}
+        <section className="grid gap-6 sm:grid-cols-3">
+          <div className="rounded-3xl border border-[#D8E4F2] bg-white p-6 shadow-2xs space-y-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#EAF1FA] text-[#4B78A8]">
+              <DollarSign className="h-5 w-5" />
             </div>
+            <h3 className="text-base font-bold text-[#24342E]">Zero Platform Commissions</h3>
+            <p className="text-xs leading-relaxed text-[#6F7D76]">
+              Keep 100% of your earnings. We connect you directly with neighbors with zero middleman deductions.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-[#E2E9E4] bg-white p-6 shadow-2xs space-y-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#F0F5F2] text-[#427A65]">
+              <Clock className="h-5 w-5" />
+            </div>
+            <h3 className="text-base font-bold text-[#24342E]">Complete Schedule Control</h3>
+            <p className="text-xs leading-relaxed text-[#6F7D76]">
+              Work when you choose. Toggle your availability on or off with a single click whenever you're busy.
+            </p>
+          </div>
+
+          <div className="rounded-3xl border border-[#D5E7DB] bg-white p-6 shadow-2xs space-y-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#E5F1EA] text-[#427A65]">
+              <HeartHandshake className="h-5 w-5" />
+            </div>
+            <h3 className="text-base font-bold text-[#24342E]">Direct Local Neighborhood</h3>
+            <p className="text-xs leading-relaxed text-[#6F7D76]">
+              Serve families in your own community, saving travel time and building long-lasting local trust.
+            </p>
           </div>
         </section>
 
-        {/* Existing Provider Status Card */}
-        {existingProvider && (
-          <div className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EAF1FA] text-lg font-bold text-[#4B78A8]">
-                {renderServiceIcon(existingProvider.serviceType, "h-6 w-6")}
-              </span>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="font-bold text-sm text-[#24342E]">{existingProvider.serviceType}</h3>
-                  <span className="rounded-full bg-[#EAF1FA] px-2 py-0.5 text-[10px] font-bold text-[#4B78A8]">
-                    {existingProvider.rateType || "Hourly"}
-                  </span>
+        {/* =========================================================
+            3. REGISTRATION / PROFILE FORM
+        ========================================================= */}
+        <section className="rounded-3xl border border-[#E2E9E4] bg-white p-6 sm:p-10 shadow-sm max-w-3xl mx-auto space-y-6">
+          <div className="border-b border-[#EEF2EF] pb-4">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#4B78A8]">
+              {existingProvider ? "Provider Dashboard" : "Offer Help"}
+            </span>
+            <h2 className="text-xl sm:text-2xl font-extrabold text-[#24342E] mt-1">
+              {existingProvider ? "Your Service Provider Profile" : "Register as a Community Service Provider"}
+            </h2>
+            <p className="text-xs text-[#6F7D76] mt-1">
+              {existingProvider
+                ? "Update your service category, coverage area, and live availability."
+                : "List your skills and rates so neighbors searching for help can reach you."}
+            </p>
+          </div>
+
+          {/* Toast feedback */}
+          {message && (
+            <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3.5 text-xs font-semibold text-emerald-800">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+              <span>{message}</span>
+            </div>
+          )}
+
+          {error && (
+            <div className="flex items-center gap-2 rounded-2xl border border-rose-200 bg-rose-50 p-3.5 text-xs font-semibold text-rose-700">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-600" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {/* Active Provider Status Card */}
+          {existingProvider && (
+            <div className="rounded-2xl border border-[#EEF2EF] bg-[#F8FAF9] p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#EAF1FA] text-[#4B78A8]">
+                  <Wrench className="h-6 w-6" />
                 </div>
-                <p className="text-xs text-[#6F7D76] mt-0.5">
-                  Location: {existingProvider.location} • Status:{" "}
-                  <strong>{existingProvider.availability ? "Active & Visible" : "Paused"}</strong>
-                </p>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-bold text-[#24342E]">{existingProvider.serviceType}</span>
+                    <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      formData.availability ? "bg-emerald-100 text-emerald-800" : "bg-gray-100 text-gray-700"
+                    }`}>
+                      {formData.availability ? "Accepting Requests" : "Currently Paused"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#6F7D76] mt-0.5">
+                    Rate: {formData.rateType} • Coverage: {existingProvider.location}
+                  </p>
+                </div>
               </div>
+
+              <button
+                type="button"
+                disabled={toggling}
+                onClick={handleToggleAvailability}
+                className={`rounded-xl px-4 py-2.5 text-xs font-bold transition shadow-2xs ${
+                  formData.availability
+                    ? "bg-[#C94C55] text-white hover:bg-[#B53D46]"
+                    : "bg-[#4B78A8] text-white hover:bg-[#3D648E]"
+                }`}
+              >
+                {toggling ? "Updating..." : formData.availability ? "Pause Requests" : "Activate Listing"}
+              </button>
+            </div>
+          )}
+
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Service Type Dropdown / Select */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#24342E] mb-2">
+                Primary Service Offering
+              </label>
+              <select
+                name="serviceType"
+                value={formData.serviceType}
+                onChange={handleChange}
+                required
+                className="h-11 w-full rounded-xl border border-[#E2E9E4] bg-[#FBFCFB] px-3.5 text-xs font-medium text-[#24342E] outline-none focus:border-[#4B78A8] focus:bg-white"
+              >
+                <option value="">Select a service category...</option>
+                {serviceTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <button
-              type="button"
-              onClick={handleToggleAvailability}
-              disabled={toggling}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition ${
-                existingProvider.availability
-                  ? "bg-[#24342E] text-white hover:bg-[#34463D]"
-                  : "bg-[#427A65] text-white hover:bg-[#356651]"
-              }`}
-            >
-              <Radio className="h-3.5 w-3.5" />
-              {toggling
-                ? "Updating..."
-                : existingProvider.availability
-                ? "Pause Availability"
-                : "Activate Availability"}
-            </button>
-          </div>
-        )}
-
-        {/* Form Grid */}
-        <div className="grid gap-6 md:grid-cols-[1.1fr_0.9fr]">
-          <section className="rounded-3xl border border-[#E2E9E4] bg-white p-5 shadow-xs sm:p-7">
-            <h2 className="text-base font-bold text-[#24342E] mb-4">
-              {existingProvider ? "Update Community Listing" : "Register Your Assistance"}
-            </h2>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Service categories */}
+            {/* Rate Type & Locality Grid */}
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-[#6F7D76]">
-                  Choose Community Service Type *
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#24342E] mb-1.5">
+                  Billing Basis
                 </label>
-
-                <div className="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto pr-1">
-                  {serviceTypes.map((type) => (
-                    <ServiceCategoryBadge
-                      key={type}
-                      service={type}
-                      selected={formData.serviceType === type}
-                      compact
-                      onClick={() => {
-                        setFormData((prev) => ({
-                          ...prev,
-                          serviceType: type,
-                        }));
-                        setError("");
-                      }}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {/* Rate Type */}
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6F7D76]">
-                  Availability Schedule / Rate Basis
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {rateTypes.map((rt) => {
-                    const isSelected = formData.rateType === rt;
-                    return (
-                      <button
-                        key={rt}
-                        type="button"
-                        onClick={() => setFormData((p) => ({ ...p, rateType: rt }))}
-                        className={`flex h-10 items-center justify-center rounded-xl border text-xs font-bold transition ${
-                          isSelected
-                            ? "border-[#4B78A8] bg-[#4B78A8] text-white shadow-2xs"
-                            : "border-[#E2E9E4] bg-[#FBFCFB] text-[#24342E] hover:border-[#BED2E8]"
-                        }`}
-                      >
-                        {rt}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6F7D76]">
-                  Service Description & Hours
-                </label>
-                <textarea
-                  rows="3"
-                  name="description"
-                  value={formData.description}
+                <select
+                  name="rateType"
+                  value={formData.rateType}
                   onChange={handleChange}
-                  placeholder="e.g. Fresh homemade lunches, cleaning assistance, weekend guest support..."
-                  className="w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] p-3 text-xs text-[#24342E] outline-none transition focus:border-[#4B78A8] focus:bg-white"
-                />
+                  className="h-11 w-full rounded-xl border border-[#E2E9E4] bg-[#FBFCFB] px-3.5 text-xs font-medium text-[#24342E] outline-none focus:border-[#4B78A8] focus:bg-white"
+                >
+                  {rateTypes.map((rt) => (
+                    <option key={rt} value={rt}>
+                      {rt}
+                    </option>
+                  ))}
+                </select>
               </div>
 
-              {/* Location Input */}
               <div>
-                <label
-                  htmlFor="provider-location"
-                  className="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-[#6F7D76]"
-                >
-                  Locality / Neighborhood *
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#24342E] mb-1.5">
+                  Coverage Locality
                 </label>
                 <div className="relative">
-                  <MapPin className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B9891]" />
+                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#8C9892]" />
                   <input
-                    id="provider-location"
-                    name="location"
                     type="text"
+                    name="location"
                     value={formData.location}
                     onChange={handleChange}
                     placeholder="e.g. Akurdi, Pune"
                     required
-                    className="h-11 w-full rounded-2xl border border-[#E2E9E4] bg-[#FBFCFB] pl-11 pr-4 text-xs text-[#24342E] outline-none transition focus:border-[#4B78A8] focus:bg-white"
+                    className="h-11 w-full rounded-xl border border-[#E2E9E4] bg-[#FBFCFB] pl-10 pr-4 text-xs font-medium text-[#24342E] outline-none focus:border-[#4B78A8] focus:bg-white"
                   />
                 </div>
               </div>
+            </div>
 
-              {/* Availability Switch */}
-              <div className="flex items-center justify-between rounded-2xl border border-[#E2E9E4] bg-[#FAFBFA] p-3.5">
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`flex h-8 w-8 items-center justify-center rounded-xl ${
-                      formData.availability
-                        ? "bg-[#EAF1FA] text-[#4B78A8]"
-                        : "bg-gray-100 text-gray-400"
-                    }`}
-                  >
-                    <Radio className="h-4 w-4" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-[#24342E]">
-                      Available for Community Requests
-                    </p>
-                    <p className="text-[11px] text-[#6F7D76]">
-                      {formData.availability ? "Visible in search" : "Paused"}
-                    </p>
-                  </div>
-                </div>
+            {/* Description */}
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-[#24342E] mb-1.5">
+                Description of Skills & Experience
+              </label>
+              <textarea
+                name="description"
+                rows="3"
+                value={formData.description}
+                onChange={handleChange}
+                placeholder="Mention your tools, experience, specialties, or standard response time..."
+                required
+                className="w-full rounded-xl border border-[#E2E9E4] bg-[#FBFCFB] p-3 text-xs text-[#24342E] outline-none focus:border-[#4B78A8] focus:bg-white"
+              />
+            </div>
 
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={formData.availability}
-                  onClick={() =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      availability: !prev.availability,
-                    }))
-                  }
-                  className={`relative h-6 w-11 shrink-0 rounded-full transition-colors ${
-                    formData.availability ? "bg-[#4B78A8]" : "bg-[#CBD3CE]"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-xs transition-all ${
-                      formData.availability ? "left-5.5" : "left-0.5"
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {error && (
-                <div
-                  role="alert"
-                  className="flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-3.5 py-2.5 text-xs font-medium text-red-700"
-                >
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              {message && (
-                <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-medium text-emerald-800">
-                  <CheckCircle2 className="h-4 w-4 shrink-0" />
-                  <span>{message}</span>
-                </div>
-              )}
-
+            {/* Submit */}
+            <div className="pt-3 border-t border-[#EEF2EF] flex justify-end">
               <button
                 type="submit"
                 disabled={registering}
-                className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#4B78A8] px-6 text-xs font-semibold text-white shadow-xs transition hover:bg-[#3D648E] disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-2xl bg-[#4B78A8] px-8 py-3 text-xs font-bold text-white shadow-xs transition hover:bg-[#3D648E] active:scale-98 disabled:opacity-60"
               >
                 {registering ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Saving...
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Publishing Listing...</span>
                   </>
                 ) : (
                   <>
-                    {existingProvider ? "Save Updated Provider Profile" : "Activate Provider Profile"}
-                    <ArrowRight className="h-4 w-4" />
+                    <Wrench className="h-4 w-4" />
+                    <span>{existingProvider ? "Update Provider Profile" : "Publish Service Offering"}</span>
                   </>
                 )}
               </button>
-            </form>
-          </section>
-
-          {/* Side Info */}
-          <aside className="flex flex-col justify-between rounded-3xl border border-[#D8E4F2] bg-gradient-to-br from-[#1E293B] to-[#0F172A] p-6 text-white sm:p-7 shadow-xs">
-            <div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-[#7DD3FC]">
-                <Sparkles className="h-5 w-5" />
-              </div>
-
-              <h3 className="mt-5 text-xl font-bold leading-tight">
-                Peer Community Helpers
-              </h3>
-              <p className="mt-2 text-xs leading-5 text-white/70">
-                Whether offering home-cooked tiffins, household cleaning, helper support, or skilled repair, you directly empower your local neighborhood.
-              </p>
-
-              <div className="mt-6 space-y-2.5">
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-white/80">
-                  <p className="font-semibold text-white">Community Rates</p>
-                  <p className="text-[11px] text-white/60">Choose Hourly, Daily, or Monthly support based on your availability.</p>
-                </div>
-                <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-xs text-white/80">
-                  <p className="font-semibold text-white">Direct Neighbor Contact</p>
-                  <p className="text-[11px] text-white/60">No platform fee, commission, or middleman intervention.</p>
-                </div>
-              </div>
             </div>
+          </form>
+        </section>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-3.5 text-xs text-white/80">
-              <div className="flex items-center gap-2 font-semibold">
-                <ShieldCheck className="h-4 w-4 text-[#75C89F]" />
-                <span>Zero Commission Community Network</span>
-              </div>
-            </div>
-          </aside>
-        </div>
-      </div>
-    </main>
+      </main>
+    </div>
   );
 }

@@ -11,6 +11,7 @@ const serviceRoutes = require("./routes/serviceRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const organizationRoutes = require("./routes/organizationRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const publicRoutes = require("./routes/publicRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -62,6 +63,7 @@ app.use("/api/services", serviceRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/organization", organizationRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/public", publicRoutes);
 
 app.use((error, req, res, next) => {
     console.error("Unhandled API error:", error.message);

@@ -362,4 +362,13 @@ export const getAdminAuditLogs = async () => {
     return response.data;
 };
 
+// ============================================
+// PUBLIC LANDING & PLATFORM STATS
+// ============================================
+
+export const getPublicStats = async () => {
+    const response = await API.get("/public/stats");
+    return response.data;
+};
+
 export default API;
