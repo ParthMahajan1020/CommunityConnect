@@ -15,7 +15,7 @@ const serviceCategories = [
   { id: "Cleaning", label: "Cleaning & Housekeeping", image: "/images/services/service-cleaning.jpg" },
   { id: "Electrician", label: "Electrician & Wiring", image: "/images/services/service-electrician.jpg" },
   { id: "Plumbing", label: "Plumbing & Piping", image: "/images/services/service-plumbing.jpg" },
-  { id: "Food", label: "Homemade Food & Tiffin", image: "/images/services/service-food.jpg" },
+  { id: "HomeHelp", label: "Home Help & Assistance", image: "/images/categories/cat-homehelp.jpg" },
   { id: "Care", label: "Elderly & Patient Care", image: "/images/services/service-eldercare.jpg" },
   { id: "Education", label: "Tutoring & Learning", image: "/images/services/service-tutoring.jpg" },
   { id: "Appliance", label: "Appliance Repairs", image: "/images/services/service-appliances.jpg" },
@@ -177,7 +177,7 @@ export default function FindService() {
               </h1>
 
               <p className="text-xs sm:text-sm text-white/80 leading-relaxed max-w-lg">
-                Discover verified electricians, plumbers, home cooks, housekeepers, and skilled neighbors without middleman markups.
+                Discover verified electricians, plumbers, caregivers, housekeepers, and skilled neighbors without middleman markups.
               </p>
 
               <div className="pt-2 flex items-center gap-3">

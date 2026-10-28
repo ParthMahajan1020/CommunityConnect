@@ -221,7 +221,7 @@ export default function Navbar() {
                   </div>
                   <div>
                     <p className="font-bold text-[#4B78A8]">Find Services</p>
-                    <p className="text-[11px] text-[#6F7D76]">Home help, food, repairs</p>
+                    <p className="text-[11px] text-[#6F7D76]">Home help, care, repairs</p>
                   </div>
                 </Link>
               </div>

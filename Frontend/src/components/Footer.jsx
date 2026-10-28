@@ -76,8 +76,8 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/services?category=Food" className="hover:text-white transition">
-                  Homemade Food
+                <Link to="/services/provider" className="hover:text-white transition">
+                  Provide Service
                 </Link>
               </li>
             </ul>
